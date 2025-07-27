@@ -7,6 +7,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
 import { PaginationDto } from '../common/dto/common.dto';
+import { SearchProductsDto } from './dto/search-products.dto';
 import { PaginatedResult } from '../common/interfaces/base.interface';
 
 @Injectable()
@@ -36,22 +37,59 @@ export class ProductsService {
         }
     }
 
-    async findAll(paginationDto: PaginationDto): Promise<PaginatedResult<ProductResponseDto>> {
-        const { page = 1, limit = 10, sort = 'createdAt', order = 'desc' } = paginationDto;
+    async findAll(paginationDto: PaginationDto & Partial<SearchProductsDto>): Promise<PaginatedResult<ProductResponseDto>> {
+        const {
+            page = 1,
+            limit = 10,
+            sort = 'createdAt',
+            order = 'desc',
+            brand,
+            isFeatured,
+            minPrice,
+            maxPrice,
+            categoryId
+        } = paginationDto;
         const skip = (page - 1) * limit;
 
         const sortOrder = order === 'asc' ? 1 : -1;
         const sortObj: Record<string, 1 | -1> = { [sort]: sortOrder };
 
+        // Build filter query
+        const filterQuery: any = { isActive: true };
+
+        // Add filters if provided
+        if (brand) {
+            filterQuery.brand = { $regex: brand, $options: 'i' };
+        }
+
+        if (isFeatured !== undefined) {
+            filterQuery.isFeatured = isFeatured;
+        }
+
+        if (categoryId) {
+            filterQuery.categoryId = categoryId;
+        }
+
+        // Price range filter
+        if (minPrice !== undefined || maxPrice !== undefined) {
+            filterQuery.price = {};
+            if (minPrice !== undefined) {
+                filterQuery.price.$gte = minPrice;
+            }
+            if (maxPrice !== undefined) {
+                filterQuery.price.$lte = maxPrice;
+            }
+        }
+
         const [products, total] = await Promise.all([
             this.productModel
-                .find({ isActive: true })
+                .find(filterQuery)
                 .populate('categoryId')
                 .sort(sortObj)
                 .skip(skip)
                 .limit(limit)
                 .exec(),
-            this.productModel.countDocuments({ isActive: true }),
+            this.productModel.countDocuments(filterQuery),
         ]);
 
         const totalPages = Math.ceil(total / limit);

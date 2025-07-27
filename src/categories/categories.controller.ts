@@ -13,6 +13,7 @@ import {
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { SearchCategoriesDto } from './dto/search-categories.dto';
 import { PaginationDto, ApiResponseDto } from '../common/dto/common.dto';
 
 @Controller('categories')
@@ -27,9 +28,18 @@ export class CategoriesController {
     }
 
     @Get()
-    async findAll(@Query() paginationDto: PaginationDto) {
-        const result = await this.categoriesService.findAll(paginationDto);
+    async findAll(@Query() queryDto: PaginationDto & Partial<SearchCategoriesDto>) {
+        const result = await this.categoriesService.findAll(queryDto);
         return ApiResponseDto.success('Categories retrieved successfully', result);
+    }
+
+    @Get('search/suggestions')
+    async getSearchSuggestions(
+        @Query('q') query: string,
+        @Query('limit') limit?: number,
+    ) {
+        const suggestions = await this.categoriesService.searchSuggestions(query, limit);
+        return ApiResponseDto.success('Category search suggestions retrieved successfully', suggestions);
     }
 
     @Get('slug/:slug')
