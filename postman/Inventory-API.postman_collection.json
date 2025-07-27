@@ -1,0 +1,585 @@
+{
+    "info": {
+        "_postman_id": "inventory-api-complete",
+        "name": "Inventory API - Complete Collection",
+        "description": "Complete API collection for testing Category and Product management endpoints",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Categories",
+            "item": [
+                {
+                    "name": "Create Category",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    if (responseJson.success && responseJson.data && responseJson.data.id) {",
+                                    "        pm.collectionVariables.set('category_id', responseJson.data.id);",
+                                    "        console.log('Category ID saved:', responseJson.data.id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Electronics\",\n  \"description\": \"Electronic devices, gadgets, and components for modern technology needs\",\n  \"isActive\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get All Categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Category by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/categories/{{category_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                "{{category_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Products",
+            "item": [
+                {
+                    "name": "Create Product - Laptop",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    if (responseJson.success && responseJson.data && responseJson.data.id) {",
+                                    "        pm.collectionVariables.set('product_id', responseJson.data.id);",
+                                    "        console.log('Product ID saved:', responseJson.data.id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"MacBook Pro 16-inch\",\n  \"description\": \"Apple MacBook Pro with M2 Pro chip, 16-inch Liquid Retina XDR display, 16GB memory, 512GB SSD storage\",\n  \"price\": 2499.99,\n  \"sku\": \"MBP16-M2PRO-512\",\n  \"quantity\": 25,\n  \"lowStockThreshold\": 5,\n  \"categoryId\": \"{{category_id}}\",\n  \"brand\": \"Apple\",\n  \"tags\": [\"laptop\", \"macbook\", \"professional\", \"m2\"],\n  \"images\": [\n    \"https://example.com/macbook-pro-1.jpg\",\n    \"https://example.com/macbook-pro-2.jpg\"\n  ],\n  \"specifications\": {\n    \"processor\": \"Apple M2 Pro chip\",\n    \"memory\": \"16GB unified memory\",\n    \"storage\": \"512GB SSD\",\n    \"display\": \"16-inch Liquid Retina XDR\",\n    \"graphics\": \"19-core GPU\",\n    \"weight\": \"2.15 kg\",\n    \"color\": \"Space Gray\"\n  },\n  \"isActive\": true,\n  \"isFeatured\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/products",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Product - Low Stock Phone",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"iPhone 15 Pro\",\n  \"description\": \"iPhone 15 Pro with A17 Pro chip, Pro camera system, and titanium design\",\n  \"price\": 999.99,\n  \"sku\": \"IPH15-PRO-128\",\n  \"quantity\": 3,\n  \"lowStockThreshold\": 5,\n  \"categoryId\": \"{{category_id}}\",\n  \"brand\": \"Apple\",\n  \"tags\": [\"smartphone\", \"iphone\", \"pro\", \"a17\"],\n  \"specifications\": {\n    \"processor\": \"A17 Pro chip\",\n    \"storage\": \"128GB\",\n    \"display\": \"6.1-inch Super Retina XDR\",\n    \"camera\": \"Pro camera system\",\n    \"material\": \"Titanium\",\n    \"color\": \"Natural Titanium\"\n  },\n  \"isActive\": true,\n  \"isFeatured\": false\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/products",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get All Products",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/products",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Products with Pagination",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/products?page=1&limit=5&sort=price&order=desc",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "5"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "price"
+                                },
+                                {
+                                    "key": "order",
+                                    "value": "desc"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Product by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/products/{{product_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "{{product_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Product by SKU",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/products/sku/MBP16-M2PRO-512",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "sku",
+                                "MBP16-M2PRO-512"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Products by Category",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/products/category/{{category_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "category",
+                                "{{category_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Low Stock Products",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/products/low-stock",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "low-stock"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Product",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"MacBook Pro 16-inch (Updated)\",\n  \"price\": 2399.99,\n  \"description\": \"Updated: Apple MacBook Pro with M2 Pro chip, now with enhanced performance\",\n  \"isFeatured\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/products/{{product_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "{{product_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Product Stock",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"quantity\": 50\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/products/{{product_id}}/stock",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "{{product_id}}",
+                                "stock"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Soft Delete Product",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/products/{{product_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "{{product_id}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Workflow Tests",
+            "item": [
+                {
+                    "name": "1. Create Test Category",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Category created successfully', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson.success).to.be.true;",
+                                    "    pm.expect(responseJson.data).to.have.property('id');",
+                                    "    pm.collectionVariables.set('test_category_id', responseJson.data.id);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Test Electronics\",\n  \"description\": \"Electronics category for testing workflow\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "2. Create Low Stock Product",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Product created successfully', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson.success).to.be.true;",
+                                    "    pm.expect(responseJson.data).to.have.property('id');",
+                                    "    pm.expect(responseJson.data.isLowStock).to.be.true;",
+                                    "    pm.collectionVariables.set('test_product_id', responseJson.data.id);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Test Headphones\",\n  \"description\": \"High-quality wireless headphones for testing\",\n  \"price\": 199.99,\n  \"sku\": \"TEST-HEADPHONES-001\",\n  \"quantity\": 2,\n  \"lowStockThreshold\": 5,\n  \"categoryId\": \"{{test_category_id}}\",\n  \"brand\": \"TestBrand\",\n  \"tags\": [\"headphones\", \"wireless\", \"test\"]\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/products",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "3. Verify Low Stock Detection",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Low stock product detected', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson.success).to.be.true;",
+                                    "    pm.expect(responseJson.data.data).to.be.an('array');",
+                                    "    pm.expect(responseJson.data.data.length).to.be.greaterThan(0);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/products/low-stock",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "low-stock"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "4. Update Stock to Normal Level",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Stock updated successfully', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson.success).to.be.true;",
+                                    "    pm.expect(responseJson.data.quantity).to.equal(20);",
+                                    "    pm.expect(responseJson.data.isLowStock).to.be.false;",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"quantity\": 20\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/products/{{test_product_id}}/stock",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "{{test_product_id}}",
+                                "stock"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:3000/api/v1",
+            "type": "string"
+        },
+        {
+            "key": "category_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "product_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "test_category_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "test_product_id",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
