@@ -1,98 +1,325 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Inventory Management API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A robust NestJS TypeScript microservice for inventory management with MongoDB integration, featuring advanced search capabilities and comprehensive CRUD operations for products and categories.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Features
 
-## Description
+- **Product Management**: Complete CRUD operations with advanced filtering
+- **Category Management**: Hierarchical category system with soft delete
+- **Advanced Search**: MongoDB aggregation-powered search with multiple filters
+- **Search Suggestions**: Intelligent autocomplete for products and categories
+- **Low Stock Monitoring**: Automatic low stock threshold tracking
+- **Data Validation**: Comprehensive input validation with class-validator
+- **Error Handling**: Centralized exception handling with detailed error responses
+- **API Documentation**: Complete Postman collection for testing
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🛠️ Technology Stack
 
-## Project setup
+- **Framework**: NestJS (Node.js)
+- **Language**: TypeScript
+- **Database**: MongoDB with Mongoose ODM
+- **Validation**: class-validator, class-transformer
+- **Configuration**: @nestjs/config
+- **Testing**: Postman collection included
+
+## 📋 Prerequisites
+
+- Node.js (v18 or higher)
+- MongoDB (local or MongoDB Atlas)
+- npm or yarn package manager
+
+## 🔧 Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone <repository-url>
+   cd inventory-api
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Environment Configuration**
+
+   Create a `.env` file in the root directory:
+
+   ```env
+   # Database Configuration
+   MONGODB_URI=mongodb://localhost:27017/inventory-api
+   DATABASE_NAME=inventory-api
+
+   # Application Configuration
+   PORT=3000
+   NODE_ENV=development
+   ```
+
+4. **Start MongoDB**
+
+   Make sure MongoDB is running on your system or configure MongoDB Atlas connection.
+
+## 🚦 Running the Application
+
+### Development Mode
 
 ```bash
-$ npm install
+npm run start:dev
 ```
 
-## Compile and run the project
+### Production Mode
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm run build
+npm run start:prod
 ```
 
-## Run tests
+### Watch Mode
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run start:debug
 ```
 
-## Deployment
+The API will be available at `http://localhost:3000`
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 📚 API Endpoints
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Categories
+
+| Method | Endpoint                         | Description                        |
+| ------ | -------------------------------- | ---------------------------------- |
+| GET    | `/categories`                    | Get all categories with pagination |
+| GET    | `/categories/:id`                | Get category by ID                 |
+| GET    | `/categories/slug/:slug`         | Get category by slug               |
+| POST   | `/categories`                    | Create new category                |
+| PATCH  | `/categories/:id`                | Update category                    |
+| DELETE | `/categories/:id`                | Soft delete category               |
+| DELETE | `/categories/:id/hard`           | Permanently delete category        |
+| GET    | `/categories/search/suggestions` | Get category search suggestions    |
+
+### Products
+
+| Method | Endpoint                         | Description                      |
+| ------ | -------------------------------- | -------------------------------- |
+| GET    | `/products`                      | Get all products with pagination |
+| GET    | `/products/:id`                  | Get product by ID                |
+| GET    | `/products/sku/:sku`             | Get product by SKU               |
+| GET    | `/products/category/:categoryId` | Get products by category         |
+| GET    | `/products/low-stock`            | Get low stock products           |
+| POST   | `/products`                      | Create new product               |
+| PATCH  | `/products/:id`                  | Update product                   |
+| PATCH  | `/products/:id/stock`            | Update product stock             |
+| DELETE | `/products/:id`                  | Soft delete product              |
+| DELETE | `/products/:id/hard`             | Permanently delete product       |
+
+### Search & Filters
+
+| Method | Endpoint                       | Description                  |
+| ------ | ------------------------------ | ---------------------------- |
+| GET    | `/products/search`             | Advanced product search      |
+| GET    | `/products/search/suggestions` | Get search suggestions       |
+| GET    | `/products/search/filters`     | Get available search filters |
+
+## 🔍 Advanced Search Features
+
+### Product Search Parameters
+
+- **q**: General text search across name, description, brand, SKU, and tags
+- **name**: Search by product name
+- **brand**: Filter by brand
+- **categoryId**: Filter by category
+- **minPrice/maxPrice**: Price range filter
+- **minQuantity/maxQuantity**: Stock quantity filter
+- **tags**: Filter by tags (comma-separated)
+- **isActive**: Filter by active status
+- **isFeatured**: Filter by featured status
+- **isLowStock**: Filter by low stock status
+- **specifications**: Search within product specifications
+- **sortBy**: Sort by relevance, price, name, createdAt, quantity
+- **order**: Sort order (asc/desc)
+- **page/limit**: Pagination parameters
+
+### Example Search Queries
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# General text search
+GET /products/search?q=macbook&page=1&limit=5
+
+# Price range filter
+GET /products/search?minPrice=500&maxPrice=2000&sortBy=price&order=asc
+
+# Brand and category filter
+GET /products/search?brand=Apple&categoryId=60f7b3b3b3f3f3f3f3f3f3f3
+
+# Tags filter
+GET /products/search?tags=laptop,professional&sortBy=name
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 📊 Data Models
 
-## Resources
+### Product Schema
 
-Check out a few resources that may come in handy when working with NestJS:
+```typescript
+{
+  name: string;           // Required, 2-200 chars
+  description: string;    // Required, 10-1000 chars
+  price: number;          // Required, min 0, max 999999.99
+  sku: string;            // Required, unique, auto-uppercase
+  quantity: number;       // Required, min 0
+  lowStockThreshold: number; // Default: 5
+  categoryId: ObjectId;   // Required, references Category
+  brand?: string;         // Optional, max 100 chars
+  tags: string[];         // Array of tags
+  images: string[];       // Array of image URLs
+  specifications: object; // Flexible JSON object
+  isActive: boolean;      // Default: true
+  isFeatured: boolean;    // Default: false
+  createdAt: Date;        // Auto-generated
+  updatedAt: Date;        // Auto-generated
+}
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Category Schema
 
-## Support
+```typescript
+{
+  name: string; // Required, unique, 2-100 chars
+  description: string; // Required, 10-500 chars
+  slug: string; // Auto-generated from name
+  isActive: boolean; // Default: true
+  createdAt: Date; // Auto-generated
+  updatedAt: Date; // Auto-generated
+}
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## 🧪 Testing
 
-## Stay in touch
+### Using Postman
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+1. Import the Postman collection from `/postman/Inventory-API.postman_collection.json`
+2. The collection includes:
+   - All API endpoints
+   - Environment variables
+   - Automated tests
+   - Workflow examples
 
-## License
+### Test Categories
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- **Category Management**: CRUD operations and search
+- **Product Management**: CRUD operations with validation
+- **Advanced Search**: All search variations and filters
+- **Error Handling**: Invalid data and edge cases
+
+## 🏗️ Project Structure
+
+```
+src/
+├── categories/
+│   ├── dto/                 # Data Transfer Objects
+│   ├── schemas/             # MongoDB schemas
+│   ├── categories.controller.ts
+│   ├── categories.service.ts
+│   └── categories.module.ts
+├── products/
+│   ├── dto/
+│   ├── schemas/
+│   ├── services/
+│   │   └── search.service.ts # Advanced search logic
+│   ├── products.controller.ts
+│   ├── products.service.ts
+│   └── products.module.ts
+├── common/
+│   ├── dto/                 # Common DTOs
+│   ├── filters/             # Exception filters
+│   ├── interfaces/          # Base interfaces
+│   └── pipes/               # Validation pipes
+├── config/
+│   └── database.config.ts   # Database configuration
+└── main.ts                  # Application entry point
+```
+
+## 🚀 Deployment
+
+### Using Docker (Optional)
+
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "run", "start:prod"]
+```
+
+### Environment Variables for Production
+
+```env
+NODE_ENV=production
+PORT=3000
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/inventory-api
+DATABASE_NAME=inventory-api
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 Development Workflow
+
+### Branch Strategy
+
+- `main`: Production-ready code
+- `dev`: Development integration branch
+- `feature/*`: Feature development branches
+
+### Code Style
+
+- Use TypeScript interfaces and DTOs
+- Follow NestJS best practices
+- Implement proper error handling
+- Use environment variables for configuration
+- Write descriptive commit messages
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **MongoDB Connection Failed**
+   - Verify MongoDB is running
+   - Check connection string in `.env`
+   - Ensure database permissions
+
+2. **Validation Errors**
+   - Check request body format
+   - Verify required fields
+   - Review data type constraints
+
+3. **Search Returns Empty Results**
+   - Verify products have `isActive: true`
+   - Check category associations
+   - Review search parameters
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 👨‍💻 Author
+
+**Ezequiel Sanchez**
+
+## 🙏 Acknowledgments
+
+- NestJS team for the amazing framework
+- Alondra, my wife, for enduring my coding marathons
+
+---
+
+For more information or support, please open an issue in the repository.
