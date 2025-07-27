@@ -11,13 +11,18 @@ import {
     HttpCode,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
+import { SearchService } from './services/search.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { SearchProductsDto } from './dto/search-products.dto';
 import { PaginationDto, ApiResponseDto } from '../common/dto/common.dto';
 
 @Controller('products')
 export class ProductsController {
-    constructor(private readonly productsService: ProductsService) { }
+    constructor(
+        private readonly productsService: ProductsService,
+        private readonly searchService: SearchService,
+    ) { }
 
     @Post()
     @HttpCode(HttpStatus.CREATED)
@@ -27,8 +32,8 @@ export class ProductsController {
     }
 
     @Get()
-    async findAll(@Query() paginationDto: PaginationDto) {
-        const result = await this.productsService.findAll(paginationDto);
+    async findAll(@Query() queryDto: PaginationDto & Partial<SearchProductsDto>) {
+        const result = await this.productsService.findAll(queryDto);
         return ApiResponseDto.success('Products retrieved successfully', result);
     }
 
@@ -36,6 +41,27 @@ export class ProductsController {
     async findLowStock(@Query() paginationDto: PaginationDto) {
         const result = await this.productsService.findLowStock(paginationDto);
         return ApiResponseDto.success('Low stock products retrieved successfully', result);
+    }
+
+    @Get('search')
+    async searchProducts(@Query() searchDto: SearchProductsDto) {
+        const result = await this.searchService.searchProducts(searchDto);
+        return ApiResponseDto.success('Products search completed successfully', result);
+    }
+
+    @Get('search/suggestions')
+    async getSearchSuggestions(
+        @Query('q') query: string,
+        @Query('limit') limit?: number,
+    ) {
+        const suggestions = await this.searchService.getSearchSuggestions(query, limit);
+        return ApiResponseDto.success('Search suggestions retrieved successfully', suggestions);
+    }
+
+    @Get('search/filters')
+    async getSearchFilters() {
+        const filters = await this.searchService.getSearchFilters();
+        return ApiResponseDto.success('Search filters retrieved successfully', filters);
     }
 
     @Get('sku/:sku')

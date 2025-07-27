@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Category, CategoryDocument } from './schemas/category.schema';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { SearchCategoriesDto } from './dto/search-categories.dto';
 import { CategoryResponseDto } from './dto/category-response.dto';
 import { PaginationDto } from '../common/dto/common.dto';
 import { PaginatedResult } from '../common/interfaces/base.interface';
@@ -36,21 +37,61 @@ export class CategoriesService {
         }
     }
 
-    async findAll(paginationDto: PaginationDto): Promise<PaginatedResult<CategoryResponseDto>> {
-        const { page = 1, limit = 10, sort = 'createdAt', order = 'desc' } = paginationDto;
+    async findAll(searchDto: PaginationDto & Partial<SearchCategoriesDto>): Promise<PaginatedResult<CategoryResponseDto>> {
+        const {
+            page = 1,
+            limit = 10,
+            sort = 'createdAt',
+            order = 'desc',
+            q,
+            name,
+            description,
+            slug,
+            isActive = true
+        } = searchDto;
         const skip = (page - 1) * limit;
 
         const sortOrder = order === 'asc' ? 1 : -1;
         const sortObj: Record<string, 1 | -1> = { [sort]: sortOrder };
 
+        // Build search query
+        const searchQuery: any = {};
+
+        // Active status filter
+        if (isActive !== undefined) {
+            searchQuery.isActive = isActive;
+        }
+
+        // Text search across multiple fields
+        if (q) {
+            searchQuery.$or = [
+                { name: { $regex: q, $options: 'i' } },
+                { description: { $regex: q, $options: 'i' } },
+                { slug: { $regex: q, $options: 'i' } }
+            ];
+        }
+
+        // Specific field searches
+        if (name) {
+            searchQuery.name = { $regex: name, $options: 'i' };
+        }
+
+        if (description) {
+            searchQuery.description = { $regex: description, $options: 'i' };
+        }
+
+        if (slug) {
+            searchQuery.slug = { $regex: slug, $options: 'i' };
+        }
+
         const [categories, total] = await Promise.all([
             this.categoryModel
-                .find({ isActive: true })
+                .find(searchQuery)
                 .sort(sortObj)
                 .skip(skip)
                 .limit(limit)
                 .exec(),
-            this.categoryModel.countDocuments({ isActive: true }),
+            this.categoryModel.countDocuments(searchQuery),
         ]);
 
         const totalPages = Math.ceil(total / limit);
@@ -130,6 +171,28 @@ export class CategoriesService {
         if (!result) {
             throw new NotFoundException('Category not found');
         }
+    }
+
+    async searchSuggestions(query: string, limit: number = 10): Promise<string[]> {
+        if (!query || query.trim().length < 2) {
+            return [];
+        }
+
+        const suggestions = new Set<string>();
+
+        // Get category name suggestions
+        const nameMatches = await this.categoryModel
+            .find({
+                name: { $regex: query, $options: 'i' },
+                isActive: true
+            })
+            .select('name')
+            .limit(limit)
+            .lean();
+
+        nameMatches.forEach(category => suggestions.add(category.name));
+
+        return Array.from(suggestions).slice(0, limit);
     }
 
     private generateSlug(name: string): string {
