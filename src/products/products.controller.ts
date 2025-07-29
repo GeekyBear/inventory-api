@@ -10,6 +10,14 @@ import {
     HttpStatus,
     HttpCode,
 } from '@nestjs/common';
+import {
+    ApiTags,
+    ApiOperation,
+    ApiResponse,
+    ApiParam,
+    ApiQuery,
+    ApiBody,
+} from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { SearchService } from './services/search.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -17,6 +25,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { SearchProductsDto } from './dto/search-products.dto';
 import { PaginationDto, ApiResponseDto } from '../common/dto/common.dto';
 
+@ApiTags('products')
 @Controller('products')
 export class ProductsController {
     constructor(
@@ -26,24 +35,65 @@ export class ProductsController {
 
     @Post()
     @HttpCode(HttpStatus.CREATED)
+    @ApiOperation({
+        summary: 'Create a new product',
+        description: 'Creates a new product with the provided information'
+    })
+    @ApiBody({ type: CreateProductDto })
+    @ApiResponse({
+        status: 201,
+        description: 'Product created successfully',
+    })
+    @ApiResponse({
+        status: 400,
+        description: 'Bad request - validation failed or invalid category'
+    })
+    @ApiResponse({
+        status: 409,
+        description: 'Conflict - product SKU already exists'
+    })
     async create(@Body() createProductDto: CreateProductDto) {
         const product = await this.productsService.create(createProductDto);
         return ApiResponseDto.success('Product created successfully', product);
     }
 
     @Get()
+    @ApiOperation({
+        summary: 'Get all products',
+        description: 'Retrieves a paginated list of products with optional filtering'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Products retrieved successfully',
+    })
     async findAll(@Query() queryDto: PaginationDto & Partial<SearchProductsDto>) {
         const result = await this.productsService.findAll(queryDto);
         return ApiResponseDto.success('Products retrieved successfully', result);
     }
 
     @Get('low-stock')
+    @ApiOperation({
+        summary: 'Get low stock products',
+        description: 'Retrieves products that have stock below their low stock threshold'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Low stock products retrieved successfully',
+    })
     async findLowStock(@Query() paginationDto: PaginationDto) {
         const result = await this.productsService.findLowStock(paginationDto);
         return ApiResponseDto.success('Low stock products retrieved successfully', result);
     }
 
     @Get('search')
+    @ApiOperation({
+        summary: 'Advanced product search',
+        description: 'Performs advanced search across products with multiple filters and sorting options'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Products search completed successfully',
+    })
     async searchProducts(@Query() searchDto: SearchProductsDto) {
         const result = await this.searchService.searchProducts(searchDto);
         return ApiResponseDto.success('Products search completed successfully', result);
