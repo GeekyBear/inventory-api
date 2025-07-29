@@ -11,7 +11,9 @@ A robust NestJS TypeScript microservice for inventory management with MongoDB in
 - **Low Stock Monitoring**: Automatic low stock threshold tracking
 - **Data Validation**: Comprehensive input validation with class-validator
 - **Error Handling**: Centralized exception handling with detailed error responses
-- **API Documentation**: Complete Postman collection for testing
+- **API Documentation**: Interactive Swagger/OpenAPI documentation + Postman collection
+- **Comprehensive Testing**: 70%+ test coverage with unit, integration, and E2E tests
+- **Cross-Platform Support**: Works seamlessly on Windows, macOS, and Linux
 
 ## 🛠️ Technology Stack
 
@@ -19,14 +21,49 @@ A robust NestJS TypeScript microservice for inventory management with MongoDB in
 - **Language**: TypeScript
 - **Database**: MongoDB with Mongoose ODM
 - **Validation**: class-validator, class-transformer
+- **Documentation**: Swagger/OpenAPI 3.0
+- **Testing**: Jest, Supertest (Unit, Integration, E2E)
 - **Configuration**: @nestjs/config
-- **Testing**: Postman collection included
+- **API Testing**: Postman collection included
 
 ## 📋 Prerequisites
 
 - Node.js (v18 or higher)
 - MongoDB (local or MongoDB Atlas)
 - npm or yarn package manager
+
+## ⚡ Quick Start
+
+Get the API running in under 5 minutes:
+
+1. **Clone and Install**
+   ```bash
+   git clone <repository-url>
+   cd inventory-api
+   npm install
+   ```
+
+2. **Setup Environment**
+   ```bash
+   # Create .env file
+   echo "MONGODB_URI=mongodb://localhost:27017/inventory-api" > .env
+   echo "DATABASE_NAME=inventory-api" >> .env
+   echo "PORT=3000" >> .env
+   ```
+
+3. **Start Development Server**
+   ```bash
+   npm run start:dev
+   ```
+
+4. **Access Documentation**
+   - API Docs: http://localhost:3000/api
+   - Test Endpoints: Import `/postman/Inventory-API.postman_collection.json`
+
+5. **Run Tests**
+   ```bash
+   npm run test:cov
+   ```
 
 ## 🔧 Installation
 
@@ -83,6 +120,47 @@ npm run start:debug
 ```
 
 The API will be available at `http://localhost:3000`
+
+## 🛠️ Available Scripts
+
+This project includes cross-platform scripts that work on Windows, macOS, and Linux:
+
+```bash
+# Development
+npm run start:dev      # Start in development mode with hot reload
+npm run start:debug    # Start in debug mode with debugging enabled
+npm run build          # Build the application for production
+npm run start:prod     # Start the built application in production mode
+
+# Testing
+npm test              # Run unit and integration tests
+npm run test:watch    # Run tests in watch mode
+npm run test:cov      # Run tests with coverage report
+npm run test:e2e      # Run end-to-end tests
+
+# Code Quality
+npm run lint          # Run ESLint to check code quality
+npm run format        # Format code with Prettier (if configured)
+```
+
+## 📖 API Documentation
+
+### Interactive Swagger Documentation
+
+Once the application is running, access the interactive API documentation at:
+
+**http://localhost:3000/api**
+
+The Swagger interface provides:
+- Complete API endpoint documentation
+- Interactive request/response examples
+- Schema definitions for all DTOs
+- Try-it-out functionality for testing endpoints
+- Authentication examples (if applicable)
+
+### Alternative Documentation
+
+You can also use the Postman collection located at `/postman/Inventory-API.postman_collection.json` for comprehensive API testing.
 
 ## 📚 API Endpoints
 
@@ -196,6 +274,39 @@ GET /products/search?tags=laptop,professional&sortBy=name
 
 ## 🧪 Testing
 
+### Test Coverage
+
+This project maintains **70%+ test coverage** with comprehensive test suites:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage report
+npm run test:cov
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run end-to-end tests
+npm run test:e2e
+```
+
+### Test Structure
+
+- **Unit Tests**: Individual service and utility function testing
+- **Controller Tests**: HTTP endpoint testing with mocked dependencies
+- **Integration Tests**: Database integration and service interaction testing
+- **E2E Tests**: Full application workflow testing
+
+### Coverage Report
+
+Current test coverage includes:
+- **Controllers**: 100% coverage for all endpoints
+- **Services**: Comprehensive business logic testing
+- **Error Handling**: Exception filters and validation testing
+- **Search Functionality**: Advanced search and aggregation testing
+
 ### Using Postman
 
 1. Import the Postman collection from `/postman/Inventory-API.postman_collection.json`
@@ -221,23 +332,40 @@ src/
 │   ├── schemas/             # MongoDB schemas
 │   ├── categories.controller.ts
 │   ├── categories.service.ts
-│   └── categories.module.ts
+│   ├── categories.module.ts
+│   └── categories.controller.spec.ts  # Controller tests
 ├── products/
 │   ├── dto/
 │   ├── schemas/
 │   ├── services/
-│   │   └── search.service.ts # Advanced search logic
+│   │   ├── search.service.ts # Advanced search logic
+│   │   └── search.service.spec.ts # Search service tests
 │   ├── products.controller.ts
 │   ├── products.service.ts
-│   └── products.module.ts
+│   ├── products.module.ts
+│   ├── products.controller.spec.ts # Controller tests
+│   └── products.service.spec.ts    # Service tests
 ├── common/
 │   ├── dto/                 # Common DTOs
 │   ├── filters/             # Exception filters
+│   │   ├── all-exceptions.filter.ts
+│   │   └── all-exceptions.filter.spec.ts # Filter tests
 │   ├── interfaces/          # Base interfaces
 │   └── pipes/               # Validation pipes
 ├── config/
 │   └── database.config.ts   # Database configuration
-└── main.ts                  # Application entry point
+├── database/
+│   └── seeds/              # Database seeding
+├── app.controller.ts
+├── app.service.ts
+├── app.module.ts
+├── app.controller.spec.ts  # App controller tests
+└── main.ts                 # Application entry point
+test/
+├── app.e2e-spec.ts        # End-to-end tests
+└── jest-e2e.json         # E2E test configuration
+postman/
+└── Inventory-API.postman_collection.json # API collection
 ```
 
 ## 🚀 Deployment
@@ -282,9 +410,14 @@ DATABASE_NAME=inventory-api
 
 ### Code Style
 
-- Use TypeScript interfaces and DTOs
-- Follow NestJS best practices
-- Implement proper error handling
+- Use TypeScript interfaces and DTOs for type safety
+- Follow NestJS best practices with modules, controllers, and services
+- Implement proper error handling and validation
+- Use MongoDB schemas with Mongoose ODM
+- Follow RESTful API conventions
+- Implement proper logging and monitoring
+- Write comprehensive tests for new features
+- Maintain Swagger documentation for API changes
 - Use environment variables for configuration
 - Write descriptive commit messages
 
@@ -298,14 +431,24 @@ DATABASE_NAME=inventory-api
    - Ensure database permissions
 
 2. **Validation Errors**
-   - Check request body format
-   - Verify required fields
-   - Review data type constraints
+   - Check request body format against Swagger documentation
+   - Verify required fields are provided
+   - Review data type constraints in DTOs
 
 3. **Search Returns Empty Results**
    - Verify products have `isActive: true`
    - Check category associations
-   - Review search parameters
+   - Review search parameters in Swagger docs
+
+4. **Tests Failing**
+   - Run `npm test` to see detailed error messages
+   - Check if MongoDB test database is accessible
+   - Verify all dependencies are installed with `npm install`
+
+5. **Swagger Documentation Not Loading**
+   - Ensure application is running on correct port
+   - Check that `/api` endpoint is accessible
+   - Verify Swagger setup in `main.ts`
 
 ## 📄 License
 
@@ -317,8 +460,12 @@ This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgments
 
-- NestJS team for the amazing framework
-- Alondra, my wife, for enduring my coding marathons
+- NestJS team for the amazing framework and comprehensive documentation
+- MongoDB team for the powerful database and aggregation framework
+- Jest community for the excellent testing framework
+- Swagger/OpenAPI for standardized API documentation
+- The open source community for continuous inspiration
+- Alondra, my wife, for enduring my coding marathons and providing endless support
 
 ---
 

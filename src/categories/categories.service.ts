@@ -49,7 +49,11 @@ export class CategoriesService {
             slug,
             isActive = true
         } = searchDto;
-        const skip = (page - 1) * limit;
+
+        // Ensure page and limit are numbers
+        const pageNum = Number(page);
+        const limitNum = Number(limit);
+        const skip = (pageNum - 1) * limitNum;
 
         const sortOrder = order === 'asc' ? 1 : -1;
         const sortObj: Record<string, 1 | -1> = { [sort]: sortOrder };
@@ -89,22 +93,22 @@ export class CategoriesService {
                 .find(searchQuery)
                 .sort(sortObj)
                 .skip(skip)
-                .limit(limit)
+                .limit(limitNum)
                 .exec(),
             this.categoryModel.countDocuments(searchQuery),
         ]);
 
-        const totalPages = Math.ceil(total / limit);
+        const totalPages = Math.ceil(total / limitNum);
 
         return {
             data: categories.map(category => new CategoryResponseDto(category)),
             pagination: {
-                page,
-                limit,
+                page: pageNum,
+                limit: limitNum,
                 total,
                 totalPages,
-                hasNext: page < totalPages,
-                hasPrev: page > 1,
+                hasNext: pageNum < totalPages,
+                hasPrev: pageNum > 1,
             },
         };
     }
