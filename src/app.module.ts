@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
+import { HealthModule } from './health/health.module';
 import databaseConfig from './config/database.config';
 
 @Module({
@@ -24,6 +25,7 @@ import databaseConfig from './config/database.config';
     }),
     CategoriesModule,
     ProductsModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
