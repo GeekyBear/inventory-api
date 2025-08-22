@@ -141,6 +141,124 @@ describe('CategoriesService', () => {
         },
       });
     });
+
+    it('should filter by general search query (q)', async () => {
+      const searchDto: SearchCategoriesDto = {
+        page: 1,
+        limit: 10,
+        q: 'electronics',
+      };
+
+      model.find.mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      model.countDocuments.mockResolvedValue(0);
+
+      await service.findAll(searchDto);
+
+      expect(model.find).toHaveBeenCalledWith({
+        isActive: true,
+        $or: [
+          { name: { $regex: 'electronics', $options: 'i' } },
+          { description: { $regex: 'electronics', $options: 'i' } },
+          { slug: { $regex: 'electronics', $options: 'i' } },
+        ],
+      });
+    });
+
+    it('should filter by name when provided', async () => {
+      const searchDto: SearchCategoriesDto = {
+        page: 1,
+        limit: 10,
+        name: 'Electronics',
+      };
+
+      model.find.mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      model.countDocuments.mockResolvedValue(0);
+
+      await service.findAll(searchDto);
+
+      expect(model.find).toHaveBeenCalledWith({
+        isActive: true,
+        name: { $regex: 'Electronics', $options: 'i' },
+      });
+    });
+
+    it('should filter by description when provided', async () => {
+      const searchDto: SearchCategoriesDto = {
+        page: 1,
+        limit: 10,
+        description: 'devices',
+      };
+
+      model.find.mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      model.countDocuments.mockResolvedValue(0);
+
+      await service.findAll(searchDto);
+
+      expect(model.find).toHaveBeenCalledWith({
+        isActive: true,
+        description: { $regex: 'devices', $options: 'i' },
+      });
+    });
+
+    it('should filter by slug when provided', async () => {
+      const searchDto: SearchCategoriesDto = {
+        page: 1,
+        limit: 10,
+        slug: 'electronics',
+      };
+
+      model.find.mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      model.countDocuments.mockResolvedValue(0);
+
+      await service.findAll(searchDto);
+
+      expect(model.find).toHaveBeenCalledWith({
+        isActive: true,
+        slug: { $regex: 'electronics', $options: 'i' },
+      });
+    });
+
+    it('should filter by isActive when provided', async () => {
+      const searchDto: SearchCategoriesDto = {
+        page: 1,
+        limit: 10,
+        isActive: false,
+      };
+
+      model.find.mockReturnValue({
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      model.countDocuments.mockResolvedValue(0);
+
+      await service.findAll(searchDto);
+
+      expect(model.find).toHaveBeenCalledWith({
+        isActive: false,
+      });
+    });
   });
 
   describe('findOne', () => {

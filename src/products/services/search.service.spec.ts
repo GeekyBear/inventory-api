@@ -336,5 +336,177 @@ describe('SearchService', () => {
       expect(productModel.aggregate).toHaveBeenCalled();
       expect(result.data).toHaveLength(1);
     });
+
+    it('should handle isLowStock filter set to false', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        isLowStock: false,
+      };
+
+      productModel.aggregate.mockResolvedValue([mockProduct]);
+
+      await service.searchProducts(searchDto);
+
+      expect(productModel.aggregate).toHaveBeenCalled();
+      const aggregateCall = productModel.aggregate.mock.calls[0][0];
+      expect(aggregateCall).toContainEqual({
+        $match: expect.objectContaining({
+          $expr: { $gt: ['$quantity', '$lowStockThreshold'] },
+        }),
+      });
+    });
+
+    it('should handle specifications filter', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        specifications: 'color:blue,size:large',
+      };
+
+      productModel.aggregate.mockResolvedValue([mockProduct]);
+
+      const result = await service.searchProducts(searchDto);
+
+      expect(productModel.aggregate).toHaveBeenCalled();
+      expect(result.data).toHaveLength(1);
+    });
+
+    it('should handle quantity range filters - both min and max', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        minQuantity: 10,
+        maxQuantity: 100,
+      };
+
+      productModel.aggregate.mockResolvedValue([mockProduct]);
+
+      await service.searchProducts(searchDto);
+
+      expect(productModel.aggregate).toHaveBeenCalled();
+      const aggregateCall = productModel.aggregate.mock.calls[0][0];
+      expect(aggregateCall).toContainEqual({
+        $match: expect.objectContaining({
+          quantity: { $gte: 10, $lte: 100 },
+        }),
+      });
+    });
+
+    it('should handle quantity range filters - min only', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        minQuantity: 10,
+      };
+
+      productModel.aggregate.mockResolvedValue([mockProduct]);
+
+      await service.searchProducts(searchDto);
+
+      expect(productModel.aggregate).toHaveBeenCalled();
+      const aggregateCall = productModel.aggregate.mock.calls[0][0];
+      expect(aggregateCall).toContainEqual({
+        $match: expect.objectContaining({
+          quantity: { $gte: 10 },
+        }),
+      });
+    });
+
+    it('should handle quantity range filters - max only', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        maxQuantity: 100,
+      };
+
+      productModel.aggregate.mockResolvedValue([mockProduct]);
+
+      await service.searchProducts(searchDto);
+
+      expect(productModel.aggregate).toHaveBeenCalled();
+      const aggregateCall = productModel.aggregate.mock.calls[0][0];
+      expect(aggregateCall).toContainEqual({
+        $match: expect.objectContaining({
+          quantity: { $lte: 100 },
+        }),
+      });
+    });
+
+    it('should handle empty tags array', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        tags: [],
+      };
+
+      productModel.aggregate.mockResolvedValue([mockProduct]);
+
+      const result = await service.searchProducts(searchDto);
+
+      expect(productModel.aggregate).toHaveBeenCalled();
+      expect(result.data).toHaveLength(1);
+    });
+
+    it('should handle price range - both min and max', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        minPrice: 100,
+        maxPrice: 500,
+      };
+
+      productModel.aggregate.mockResolvedValue([mockProduct]);
+
+      await service.searchProducts(searchDto);
+
+      expect(productModel.aggregate).toHaveBeenCalled();
+      const aggregateCall = productModel.aggregate.mock.calls[0][0];
+      expect(aggregateCall).toContainEqual({
+        $match: expect.objectContaining({
+          price: { $gte: 100, $lte: 500 },
+        }),
+      });
+    });
+
+    it('should handle price range - min only', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        minPrice: 100,
+      };
+
+      productModel.aggregate.mockResolvedValue([mockProduct]);
+
+      await service.searchProducts(searchDto);
+
+      expect(productModel.aggregate).toHaveBeenCalled();
+      const aggregateCall = productModel.aggregate.mock.calls[0][0];
+      expect(aggregateCall).toContainEqual({
+        $match: expect.objectContaining({
+          price: { $gte: 100 },
+        }),
+      });
+    });
+
+    it('should handle price range - max only', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        maxPrice: 500,
+      };
+
+      productModel.aggregate.mockResolvedValue([mockProduct]);
+
+      await service.searchProducts(searchDto);
+
+      expect(productModel.aggregate).toHaveBeenCalled();
+      const aggregateCall = productModel.aggregate.mock.calls[0][0];
+      expect(aggregateCall).toContainEqual({
+        $match: expect.objectContaining({
+          price: { $lte: 500 },
+        }),
+      });
+    });
   });
 });

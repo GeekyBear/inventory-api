@@ -210,6 +210,54 @@ describe('ProductsService', () => {
       });
     });
 
+    it('should filter by brand when provided', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        brand: 'Apple',
+      };
+
+      productModel.find.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      productModel.countDocuments.mockResolvedValue(0);
+
+      await service.findAll(searchDto);
+
+      expect(productModel.find).toHaveBeenCalledWith({
+        isActive: true,
+        brand: { $regex: 'Apple', $options: 'i' },
+      });
+    });
+
+    it('should filter by isFeatured when provided', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        isFeatured: true,
+      };
+
+      productModel.find.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      productModel.countDocuments.mockResolvedValue(0);
+
+      await service.findAll(searchDto);
+
+      expect(productModel.find).toHaveBeenCalledWith({
+        isActive: true,
+        isFeatured: true,
+      });
+    });
+
     it('should filter by category when provided', async () => {
       const searchDto: SearchProductsDto = {
         page: 1,
@@ -231,6 +279,79 @@ describe('ProductsService', () => {
       expect(productModel.find).toHaveBeenCalledWith({
         isActive: true,
         categoryId: '64a7b8c9d1234567890abcde',
+      });
+    });
+
+    it('should filter by minPrice when provided', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        minPrice: 500,
+      };
+
+      productModel.find.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      productModel.countDocuments.mockResolvedValue(0);
+
+      await service.findAll(searchDto);
+
+      expect(productModel.find).toHaveBeenCalledWith({
+        isActive: true,
+        price: { $gte: 500 },
+      });
+    });
+
+    it('should filter by maxPrice when provided', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        maxPrice: 1000,
+      };
+
+      productModel.find.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      productModel.countDocuments.mockResolvedValue(0);
+
+      await service.findAll(searchDto);
+
+      expect(productModel.find).toHaveBeenCalledWith({
+        isActive: true,
+        price: { $lte: 1000 },
+      });
+    });
+
+    it('should filter by price range when both minPrice and maxPrice provided', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        minPrice: 500,
+        maxPrice: 1000,
+      };
+
+      productModel.find.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      productModel.countDocuments.mockResolvedValue(0);
+
+      await service.findAll(searchDto);
+
+      expect(productModel.find).toHaveBeenCalledWith({
+        isActive: true,
+        price: { $gte: 500, $lte: 1000 },
       });
     });
   });
@@ -393,6 +514,222 @@ describe('ProductsService', () => {
       expect(result).toEqual({
         data: expect.any(Array),
         pagination: expect.any(Object),
+      });
+    });
+  });
+
+  describe('findBySku', () => {
+    it('should return a product by SKU', async () => {
+      const sku = 'PHONE-001';
+      const mockProductWithCategory = {
+        ...mockProduct,
+        categoryId: mockCategory,
+      };
+
+      productModel.findOne.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(mockProductWithCategory),
+      });
+
+      const result = await service.findBySku(sku);
+
+      expect(productModel.findOne).toHaveBeenCalledWith({
+        sku: sku.toUpperCase(),
+        isActive: true,
+      });
+      expect(result).toBeInstanceOf(ProductResponseDto);
+    });
+
+    it('should throw NotFoundException when product not found by SKU', async () => {
+      const sku = 'NONEXISTENT-001';
+
+      productModel.findOne.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(null),
+      });
+
+      await expect(service.findBySku(sku)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('findByCategory', () => {
+    it('should return products by category', async () => {
+      const categoryId = '64a7b8c9d1234567890abcde';
+      const paginationDto: PaginationDto = { page: 1, limit: 10 };
+      const mockProducts = [mockProduct];
+
+      categoryModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue({ ...mockCategory, isActive: true }),
+      });
+
+      productModel.find.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(mockProducts),
+      });
+      productModel.countDocuments.mockResolvedValue(1);
+
+      const result = await service.findByCategory(categoryId, paginationDto);
+
+      expect(categoryModel.findById).toHaveBeenCalledWith(categoryId);
+      expect(productModel.find).toHaveBeenCalledWith({
+        categoryId,
+        isActive: true,
+      });
+      expect(result).toEqual({
+        data: expect.any(Array),
+        pagination: expect.any(Object),
+      });
+    });
+
+    it('should throw BadRequestException when category not found', async () => {
+      const categoryId = '64a7b8c9d1234567890abcde';
+      const paginationDto: PaginationDto = { page: 1, limit: 10 };
+
+      categoryModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
+
+      await expect(
+        service.findByCategory(categoryId, paginationDto),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when category is inactive', async () => {
+      const categoryId = '64a7b8c9d1234567890abcde';
+      const paginationDto: PaginationDto = { page: 1, limit: 10 };
+
+      categoryModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue({ ...mockCategory, isActive: false }),
+      });
+
+      await expect(
+        service.findByCategory(categoryId, paginationDto),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('findAll with filters', () => {
+    it('should filter by brand when provided', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        brand: 'Apple',
+      };
+
+      productModel.find.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      productModel.countDocuments.mockResolvedValue(0);
+
+      await service.findAll(searchDto);
+
+      expect(productModel.find).toHaveBeenCalledWith({
+        isActive: true,
+        brand: { $regex: 'Apple', $options: 'i' },
+      });
+    });
+
+    it('should filter by isFeatured when provided', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        isFeatured: true,
+      };
+
+      productModel.find.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      productModel.countDocuments.mockResolvedValue(0);
+
+      await service.findAll(searchDto);
+
+      expect(productModel.find).toHaveBeenCalledWith({
+        isActive: true,
+        isFeatured: true,
+      });
+    });
+
+    it('should filter by price range when minPrice and maxPrice provided', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        minPrice: 100,
+        maxPrice: 500,
+      };
+
+      productModel.find.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      productModel.countDocuments.mockResolvedValue(0);
+
+      await service.findAll(searchDto);
+
+      expect(productModel.find).toHaveBeenCalledWith({
+        isActive: true,
+        price: { $gte: 100, $lte: 500 },
+      });
+    });
+
+    it('should filter by minimum price only when provided', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        minPrice: 100,
+      };
+
+      productModel.find.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      productModel.countDocuments.mockResolvedValue(0);
+
+      await service.findAll(searchDto);
+
+      expect(productModel.find).toHaveBeenCalledWith({
+        isActive: true,
+        price: { $gte: 100 },
+      });
+    });
+
+    it('should filter by maximum price only when provided', async () => {
+      const searchDto: SearchProductsDto = {
+        page: 1,
+        limit: 10,
+        maxPrice: 500,
+      };
+
+      productModel.find.mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      productModel.countDocuments.mockResolvedValue(0);
+
+      await service.findAll(searchDto);
+
+      expect(productModel.find).toHaveBeenCalledWith({
+        isActive: true,
+        price: { $lte: 500 },
       });
     });
   });
