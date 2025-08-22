@@ -9,11 +9,13 @@ jest.setTimeout(30000);
 
 // Global test setup
 beforeAll(async () => {
-    // Any global setup can go here
-    console.log('🧪 Starting E2E tests...');
+  // Any global setup can go here
+  await Promise.resolve();
+  console.log('🧪 Starting E2E tests...');
 });
 
 afterAll(async () => {
-    // Any global cleanup can go here
-    console.log('✅ E2E tests completed');
+  // Any global cleanup can go here
+  await Promise.resolve();
+  console.log('✅ E2E tests completed');
 });

@@ -25,12 +25,18 @@ async function bootstrap() {
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('Inventory Management API')
-    .setDescription('A robust NestJS TypeScript microservice for inventory management with MongoDB integration, featuring advanced search capabilities and comprehensive CRUD operations for products and categories.')
+    .setDescription(
+      'A robust NestJS TypeScript microservice for inventory management with MongoDB integration, featuring advanced search capabilities and comprehensive CRUD operations for products and categories.',
+    )
     .setVersion('1.0')
     .addTag('categories', 'Category management operations')
     .addTag('products', 'Product management operations')
     .addTag('search', 'Advanced search and filtering operations')
-    .setContact('Ezequiel Sanchez', 'https://github.com/GeekyBear/inventory-api', 'your-email@example.com')
+    .setContact(
+      'Ezequiel Sanchez',
+      'https://github.com/GeekyBear/inventory-api',
+      'your-email@example.com',
+    )
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
     .build();
 
@@ -51,4 +57,4 @@ async function bootstrap() {
   console.log(`📊 Database: ${process.env.MONGODB_URI}`);
   console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
 }
-bootstrap();
+void bootstrap();

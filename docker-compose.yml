@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Application service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/inventory-api
+      - DATABASE_NAME=inventory-api
+    depends_on:
+      - mongodb
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run start:dev
+
+  # MongoDB service
+  mongodb:
+    image: mongo:7.0
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=inventory-api
+    volumes:
+      - mongodb_data:/data/db
+      - ./database/seeds:/docker-entrypoint-initdb.d
+
+  # MongoDB Express (Web UI)
+  mongo-express:
+    image: mongo-express:latest
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=password
+    depends_on:
+      - mongodb
+
+volumes:
+  mongodb_data:

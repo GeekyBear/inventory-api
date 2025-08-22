@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
+import { HealthModule } from './health/health.module';
 import databaseConfig from './config/database.config';
 
 @Module({
@@ -16,16 +17,20 @@ import databaseConfig from './config/database.config';
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('database.uri'),
-        dbName: configService.get<string>('database.name'),
-      }),
+      useFactory: async (configService: ConfigService) => {
+        await Promise.resolve();
+        return {
+          uri: configService.get<string>('database.uri'),
+          dbName: configService.get<string>('database.name'),
+        };
+      },
       inject: [ConfigService],
     }),
     CategoriesModule,
     ProductsModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

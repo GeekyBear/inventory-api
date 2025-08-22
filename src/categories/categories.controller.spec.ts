@@ -6,285 +6,313 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 
 describe('CategoriesController', () => {
-    let controller: CategoriesController;
-    let service: CategoriesService;
+  let controller: CategoriesController;
+  let service: CategoriesService;
 
-    const mockCategory = {
-        id: '64a7b8c9d1234567890abcde',
+  const mockCategory = {
+    id: '64a7b8c9d1234567890abcde',
+    name: 'Electronics',
+    description: 'Electronic devices and accessories',
+    slug: 'electronics',
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const mockCategoriesService = {
+    create: jest.fn(),
+    findAll: jest.fn(),
+    findOne: jest.fn(),
+    findBySlug: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
+    hardDelete: jest.fn(),
+    searchSuggestions: jest.fn(),
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [CategoriesController],
+      providers: [
+        {
+          provide: CategoriesService,
+          useValue: mockCategoriesService,
+        },
+      ],
+    }).compile();
+
+    controller = module.get<CategoriesController>(CategoriesController);
+    service = module.get<CategoriesService>(CategoriesService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('create', () => {
+    it('should create a new category successfully', async () => {
+      const createCategoryDto: CreateCategoryDto = {
         name: 'Electronics',
         description: 'Electronic devices and accessories',
-        slug: 'electronics',
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    };
+      };
 
-    const mockCategoriesService = {
-        create: jest.fn(),
-        findAll: jest.fn(),
-        findOne: jest.fn(),
-        findBySlug: jest.fn(),
-        update: jest.fn(),
-        remove: jest.fn(),
-        hardDelete: jest.fn(),
-        searchSuggestions: jest.fn(),
-    };
+      mockCategoriesService.create.mockResolvedValue(mockCategory);
 
-    beforeEach(async () => {
-        const module: TestingModule = await Test.createTestingModule({
-            controllers: [CategoriesController],
-            providers: [
-                {
-                    provide: CategoriesService,
-                    useValue: mockCategoriesService,
-                },
-            ],
-        }).compile();
+      const result = await controller.create(createCategoryDto);
 
-        controller = module.get<CategoriesController>(CategoriesController);
-        service = module.get<CategoriesService>(CategoriesService);
+      expect(service.create).toHaveBeenCalledWith(createCategoryDto);
+      expect(result).toEqual({
+        success: true,
+        message: 'Category created successfully',
+        data: mockCategory,
+      });
     });
 
-    afterEach(() => {
-        jest.clearAllMocks();
+    it('should handle ConflictException from service', async () => {
+      const createCategoryDto: CreateCategoryDto = {
+        name: 'Electronics',
+        description: 'Electronic devices and accessories',
+      };
+
+      mockCategoriesService.create.mockRejectedValue(
+        new ConflictException('Category name already exists'),
+      );
+
+      await expect(controller.create(createCategoryDto)).rejects.toThrow(
+        ConflictException,
+      );
+      expect(service.create).toHaveBeenCalledWith(createCategoryDto);
+    });
+  });
+
+  describe('findAll', () => {
+    it('should return paginated categories', async () => {
+      const queryDto = { page: 1, limit: 10 };
+      const mockResult = {
+        data: [mockCategory],
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: 1,
+          itemsPerPage: 10,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      };
+
+      mockCategoriesService.findAll.mockResolvedValue(mockResult);
+
+      const result = await controller.findAll(queryDto);
+
+      expect(service.findAll).toHaveBeenCalledWith(queryDto);
+      expect(result).toEqual({
+        success: true,
+        message: 'Categories retrieved successfully',
+        data: mockResult,
+      });
     });
 
-    describe('create', () => {
-        it('should create a new category successfully', async () => {
-            const createCategoryDto: CreateCategoryDto = {
-                name: 'Electronics',
-                description: 'Electronic devices and accessories',
-            };
+    it('should handle search parameters', async () => {
+      const queryDto = { page: 1, limit: 10, q: 'electronics' };
+      const mockResult = {
+        data: [mockCategory],
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: 1,
+          itemsPerPage: 10,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      };
 
-            mockCategoriesService.create.mockResolvedValue(mockCategory);
+      mockCategoriesService.findAll.mockResolvedValue(mockResult);
 
-            const result = await controller.create(createCategoryDto);
+      const result = await controller.findAll(queryDto);
 
-            expect(service.create).toHaveBeenCalledWith(createCategoryDto);
-            expect(result).toEqual({
-                success: true,
-                message: 'Category created successfully',
-                data: mockCategory,
-            });
-        });
+      expect(service.findAll).toHaveBeenCalledWith(queryDto);
+      expect(result.success).toBe(true);
+    });
+  });
 
-        it('should handle ConflictException from service', async () => {
-            const createCategoryDto: CreateCategoryDto = {
-                name: 'Electronics',
-                description: 'Electronic devices and accessories',
-            };
+  describe('findOne', () => {
+    it('should return a category by id', async () => {
+      mockCategoriesService.findOne.mockResolvedValue(mockCategory);
 
-            mockCategoriesService.create.mockRejectedValue(
-                new ConflictException('Category name already exists')
-            );
+      const result = await controller.findOne('64a7b8c9d1234567890abcde');
 
-            await expect(controller.create(createCategoryDto)).rejects.toThrow(ConflictException);
-            expect(service.create).toHaveBeenCalledWith(createCategoryDto);
-        });
+      expect(service.findOne).toHaveBeenCalledWith('64a7b8c9d1234567890abcde');
+      expect(result).toEqual({
+        success: true,
+        message: 'Category retrieved successfully',
+        data: mockCategory,
+      });
     });
 
-    describe('findAll', () => {
-        it('should return paginated categories', async () => {
-            const queryDto = { page: 1, limit: 10 };
-            const mockResult = {
-                data: [mockCategory],
-                pagination: {
-                    currentPage: 1,
-                    totalPages: 1,
-                    totalItems: 1,
-                    itemsPerPage: 10,
-                    hasNextPage: false,
-                    hasPreviousPage: false,
-                },
-            };
+    it('should handle NotFoundException from service', async () => {
+      mockCategoriesService.findOne.mockRejectedValue(
+        new NotFoundException('Category not found'),
+      );
 
-            mockCategoriesService.findAll.mockResolvedValue(mockResult);
+      await expect(
+        controller.findOne('64a7b8c9d1234567890abcde'),
+      ).rejects.toThrow(NotFoundException);
+      expect(service.findOne).toHaveBeenCalledWith('64a7b8c9d1234567890abcde');
+    });
+  });
 
-            const result = await controller.findAll(queryDto);
+  describe('findBySlug', () => {
+    it('should return a category by slug', async () => {
+      mockCategoriesService.findBySlug.mockResolvedValue(mockCategory);
 
-            expect(service.findAll).toHaveBeenCalledWith(queryDto);
-            expect(result).toEqual({
-                success: true,
-                message: 'Categories retrieved successfully',
-                data: mockResult,
-            });
-        });
+      const result = await controller.findBySlug('electronics');
 
-        it('should handle search parameters', async () => {
-            const queryDto = { page: 1, limit: 10, q: 'electronics' };
-            const mockResult = {
-                data: [mockCategory],
-                pagination: {
-                    currentPage: 1,
-                    totalPages: 1,
-                    totalItems: 1,
-                    itemsPerPage: 10,
-                    hasNextPage: false,
-                    hasPreviousPage: false,
-                },
-            };
-
-            mockCategoriesService.findAll.mockResolvedValue(mockResult);
-
-            const result = await controller.findAll(queryDto);
-
-            expect(service.findAll).toHaveBeenCalledWith(queryDto);
-            expect(result.success).toBe(true);
-        });
+      expect(service.findBySlug).toHaveBeenCalledWith('electronics');
+      expect(result).toEqual({
+        success: true,
+        message: 'Category retrieved successfully',
+        data: mockCategory,
+      });
     });
 
-    describe('findOne', () => {
-        it('should return a category by id', async () => {
-            mockCategoriesService.findOne.mockResolvedValue(mockCategory);
+    it('should handle NotFoundException from service', async () => {
+      mockCategoriesService.findBySlug.mockRejectedValue(
+        new NotFoundException('Category not found'),
+      );
 
-            const result = await controller.findOne('64a7b8c9d1234567890abcde');
+      await expect(controller.findBySlug('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(service.findBySlug).toHaveBeenCalledWith('nonexistent');
+    });
+  });
 
-            expect(service.findOne).toHaveBeenCalledWith('64a7b8c9d1234567890abcde');
-            expect(result).toEqual({
-                success: true,
-                message: 'Category retrieved successfully',
-                data: mockCategory,
-            });
-        });
+  describe('update', () => {
+    it('should update a category successfully', async () => {
+      const updateCategoryDto: UpdateCategoryDto = {
+        name: 'Updated Electronics',
+        description: 'Updated description',
+      };
 
-        it('should handle NotFoundException from service', async () => {
-            mockCategoriesService.findOne.mockRejectedValue(
-                new NotFoundException('Category not found')
-            );
+      const updatedCategory = { ...mockCategory, ...updateCategoryDto };
+      mockCategoriesService.update.mockResolvedValue(updatedCategory);
 
-            await expect(controller.findOne('64a7b8c9d1234567890abcde')).rejects.toThrow(NotFoundException);
-            expect(service.findOne).toHaveBeenCalledWith('64a7b8c9d1234567890abcde');
-        });
+      const result = await controller.update(
+        '64a7b8c9d1234567890abcde',
+        updateCategoryDto,
+      );
+
+      expect(service.update).toHaveBeenCalledWith(
+        '64a7b8c9d1234567890abcde',
+        updateCategoryDto,
+      );
+      expect(result).toEqual({
+        success: true,
+        message: 'Category updated successfully',
+        data: updatedCategory,
+      });
     });
 
-    describe('findBySlug', () => {
-        it('should return a category by slug', async () => {
-            mockCategoriesService.findBySlug.mockResolvedValue(mockCategory);
+    it('should handle NotFoundException from service', async () => {
+      const updateCategoryDto: UpdateCategoryDto = {
+        name: 'Updated Electronics',
+      };
 
-            const result = await controller.findBySlug('electronics');
+      mockCategoriesService.update.mockRejectedValue(
+        new NotFoundException('Category not found'),
+      );
 
-            expect(service.findBySlug).toHaveBeenCalledWith('electronics');
-            expect(result).toEqual({
-                success: true,
-                message: 'Category retrieved successfully',
-                data: mockCategory,
-            });
-        });
+      await expect(
+        controller.update('64a7b8c9d1234567890abcde', updateCategoryDto),
+      ).rejects.toThrow(NotFoundException);
+      expect(service.update).toHaveBeenCalledWith(
+        '64a7b8c9d1234567890abcde',
+        updateCategoryDto,
+      );
+    });
+  });
 
-        it('should handle NotFoundException from service', async () => {
-            mockCategoriesService.findBySlug.mockRejectedValue(
-                new NotFoundException('Category not found')
-            );
+  describe('remove', () => {
+    it('should soft delete a category successfully', async () => {
+      mockCategoriesService.remove.mockResolvedValue(undefined);
 
-            await expect(controller.findBySlug('nonexistent')).rejects.toThrow(NotFoundException);
-            expect(service.findBySlug).toHaveBeenCalledWith('nonexistent');
-        });
+      const result = await controller.remove('64a7b8c9d1234567890abcde');
+
+      expect(service.remove).toHaveBeenCalledWith('64a7b8c9d1234567890abcde');
+      expect(result).toEqual({
+        success: true,
+        message: 'Category deleted successfully',
+      });
     });
 
-    describe('update', () => {
-        it('should update a category successfully', async () => {
-            const updateCategoryDto: UpdateCategoryDto = {
-                name: 'Updated Electronics',
-                description: 'Updated description',
-            };
+    it('should handle NotFoundException from service', async () => {
+      mockCategoriesService.remove.mockRejectedValue(
+        new NotFoundException('Category not found'),
+      );
 
-            const updatedCategory = { ...mockCategory, ...updateCategoryDto };
-            mockCategoriesService.update.mockResolvedValue(updatedCategory);
+      await expect(
+        controller.remove('64a7b8c9d1234567890abcde'),
+      ).rejects.toThrow(NotFoundException);
+      expect(service.remove).toHaveBeenCalledWith('64a7b8c9d1234567890abcde');
+    });
+  });
 
-            const result = await controller.update('64a7b8c9d1234567890abcde', updateCategoryDto);
+  describe('hardDelete', () => {
+    it('should permanently delete a category successfully', async () => {
+      mockCategoriesService.hardDelete.mockResolvedValue(undefined);
 
-            expect(service.update).toHaveBeenCalledWith('64a7b8c9d1234567890abcde', updateCategoryDto);
-            expect(result).toEqual({
-                success: true,
-                message: 'Category updated successfully',
-                data: updatedCategory,
-            });
-        });
+      const result = await controller.hardDelete('64a7b8c9d1234567890abcde');
 
-        it('should handle NotFoundException from service', async () => {
-            const updateCategoryDto: UpdateCategoryDto = {
-                name: 'Updated Electronics',
-            };
-
-            mockCategoriesService.update.mockRejectedValue(
-                new NotFoundException('Category not found')
-            );
-
-            await expect(controller.update('64a7b8c9d1234567890abcde', updateCategoryDto))
-                .rejects.toThrow(NotFoundException);
-            expect(service.update).toHaveBeenCalledWith('64a7b8c9d1234567890abcde', updateCategoryDto);
-        });
+      expect(service.hardDelete).toHaveBeenCalledWith(
+        '64a7b8c9d1234567890abcde',
+      );
+      expect(result).toEqual({
+        success: true,
+        message: 'Category permanently deleted',
+      });
     });
 
-    describe('remove', () => {
-        it('should soft delete a category successfully', async () => {
-            mockCategoriesService.remove.mockResolvedValue(undefined);
+    it('should handle NotFoundException from service', async () => {
+      mockCategoriesService.hardDelete.mockRejectedValue(
+        new NotFoundException('Category not found'),
+      );
 
-            const result = await controller.remove('64a7b8c9d1234567890abcde');
+      await expect(
+        controller.hardDelete('64a7b8c9d1234567890abcde'),
+      ).rejects.toThrow(NotFoundException);
+      expect(service.hardDelete).toHaveBeenCalledWith(
+        '64a7b8c9d1234567890abcde',
+      );
+    });
+  });
 
-            expect(service.remove).toHaveBeenCalledWith('64a7b8c9d1234567890abcde');
-            expect(result).toEqual({
-                success: true,
-                message: 'Category deleted successfully',
-            });
-        });
+  describe('getSearchSuggestions', () => {
+    it('should return search suggestions', async () => {
+      const mockSuggestions = ['Electronics', 'Electronic Accessories'];
+      mockCategoriesService.searchSuggestions.mockResolvedValue(
+        mockSuggestions,
+      );
 
-        it('should handle NotFoundException from service', async () => {
-            mockCategoriesService.remove.mockRejectedValue(
-                new NotFoundException('Category not found')
-            );
+      const result = await controller.getSearchSuggestions('elec', 5);
 
-            await expect(controller.remove('64a7b8c9d1234567890abcde')).rejects.toThrow(NotFoundException);
-            expect(service.remove).toHaveBeenCalledWith('64a7b8c9d1234567890abcde');
-        });
+      expect(service.searchSuggestions).toHaveBeenCalledWith('elec', 5);
+      expect(result).toEqual({
+        success: true,
+        message: 'Category search suggestions retrieved successfully',
+        data: mockSuggestions,
+      });
     });
 
-    describe('hardDelete', () => {
-        it('should permanently delete a category successfully', async () => {
-            mockCategoriesService.hardDelete.mockResolvedValue(undefined);
+    it('should use default limit when not provided', async () => {
+      const mockSuggestions = ['Electronics'];
+      mockCategoriesService.searchSuggestions.mockResolvedValue(
+        mockSuggestions,
+      );
 
-            const result = await controller.hardDelete('64a7b8c9d1234567890abcde');
+      const result = await controller.getSearchSuggestions('elec');
 
-            expect(service.hardDelete).toHaveBeenCalledWith('64a7b8c9d1234567890abcde');
-            expect(result).toEqual({
-                success: true,
-                message: 'Category permanently deleted',
-            });
-        });
-
-        it('should handle NotFoundException from service', async () => {
-            mockCategoriesService.hardDelete.mockRejectedValue(
-                new NotFoundException('Category not found')
-            );
-
-            await expect(controller.hardDelete('64a7b8c9d1234567890abcde')).rejects.toThrow(NotFoundException);
-            expect(service.hardDelete).toHaveBeenCalledWith('64a7b8c9d1234567890abcde');
-        });
+      expect(service.searchSuggestions).toHaveBeenCalledWith('elec', undefined);
+      expect(result.success).toBe(true);
     });
-
-    describe('getSearchSuggestions', () => {
-        it('should return search suggestions', async () => {
-            const mockSuggestions = ['Electronics', 'Electronic Accessories'];
-            mockCategoriesService.searchSuggestions.mockResolvedValue(mockSuggestions);
-
-            const result = await controller.getSearchSuggestions('elec', 5);
-
-            expect(service.searchSuggestions).toHaveBeenCalledWith('elec', 5);
-            expect(result).toEqual({
-                success: true,
-                message: 'Category search suggestions retrieved successfully',
-                data: mockSuggestions,
-            });
-        });
-
-        it('should use default limit when not provided', async () => {
-            const mockSuggestions = ['Electronics'];
-            mockCategoriesService.searchSuggestions.mockResolvedValue(mockSuggestions);
-
-            const result = await controller.getSearchSuggestions('elec');
-
-            expect(service.searchSuggestions).toHaveBeenCalledWith('elec', undefined);
-            expect(result.success).toBe(true);
-        });
-    });
+  });
 });

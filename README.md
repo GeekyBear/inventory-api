@@ -1,5 +1,12 @@
 # Inventory Management API
 
+[![CI/CD Pipeline](https://github.com/GeekyBear/inventory-api/actions/workflows/ci.yml/badge.svg)](https://github.com/GeekyBear/inventory-api/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/GeekyBear/inventory-api/branch/main/graph/badge.svg)](https://codecov.io/gh/GeekyBear/inventory-api)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
+[![NestJS](https://img.shields.io/badge/nestjs-%23E0234E.svg?style=flat&logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=flat&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+
 A robust NestJS TypeScript microservice for inventory management with MongoDB integration, featuring advanced search capabilities and comprehensive CRUD operations for products and categories.
 
 ## 🚀 Features
