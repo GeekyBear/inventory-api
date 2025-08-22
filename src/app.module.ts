@@ -17,10 +17,13 @@ import databaseConfig from './config/database.config';
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('database.uri'),
-        dbName: configService.get<string>('database.name'),
-      }),
+      useFactory: async (configService: ConfigService) => {
+        await Promise.resolve();
+        return {
+          uri: configService.get<string>('database.uri'),
+          dbName: configService.get<string>('database.name'),
+        };
+      },
       inject: [ConfigService],
     }),
     CategoriesModule,
@@ -30,4 +33,4 @@ import databaseConfig from './config/database.config';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

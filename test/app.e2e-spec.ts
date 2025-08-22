@@ -29,11 +29,13 @@ describe('Inventory API (e2e)', () => {
 
     // Apply same middleware as main app
     app.useGlobalFilters(new AllExceptionsFilter());
-    app.useGlobalPipes(new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      forbidNonWhitelisted: true,
-    }));
+    app.useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+      }),
+    );
     app.setGlobalPrefix('api/v1');
 
     await app.init();
@@ -95,19 +97,15 @@ describe('Inventory API (e2e)', () => {
     describe('GET /api/v1/categories', () => {
       beforeEach(async () => {
         // Create test categories
-        await request(app.getHttpServer())
-          .post('/api/v1/categories')
-          .send({
-            name: 'Electronics',
-            description: 'Electronic devices and accessories',
-          });
+        await request(app.getHttpServer()).post('/api/v1/categories').send({
+          name: 'Electronics',
+          description: 'Electronic devices and accessories',
+        });
 
-        await request(app.getHttpServer())
-          .post('/api/v1/categories')
-          .send({
-            name: 'Books',
-            description: 'Books and publications',
-          });
+        await request(app.getHttpServer()).post('/api/v1/categories').send({
+          name: 'Books',
+          description: 'Books and publications',
+        });
       });
 
       it('should return paginated categories', () => {
@@ -168,7 +166,8 @@ describe('Inventory API (e2e)', () => {
       it('should create a new product', () => {
         const createProductDto = {
           name: 'MacBook Pro 16-inch',
-          description: 'High-performance laptop with M2 chip, 16GB RAM, and 512GB SSD',
+          description:
+            'High-performance laptop with M2 chip, 16GB RAM, and 512GB SSD',
           price: 2499.99,
           sku: 'MBP16-M2-512',
           quantity: 25,
@@ -298,7 +297,9 @@ describe('Inventory API (e2e)', () => {
             expect(res.body.success).toBe(true);
             expect(res.body.data.data).toBeInstanceOf(Array);
             expect(res.body.data.data.length).toBe(2);
-            expect(res.body.data.data.every((p: any) => p.brand === 'Apple')).toBe(true);
+            expect(
+              res.body.data.data.every((p: any) => p.brand === 'Apple'),
+            ).toBe(true);
           });
       });
 
@@ -392,7 +393,9 @@ describe('Inventory API (e2e)', () => {
             expect(res.body.success).toBe(true);
             expect(res.body.data.data).toBeInstanceOf(Array);
             expect(res.body.data.data.length).toBe(2);
-            expect(res.body.data.data[0].price).toBeLessThan(res.body.data.data[1].price);
+            expect(res.body.data.data[0].price).toBeLessThan(
+              res.body.data.data[1].price,
+            );
           });
       });
     });
@@ -503,7 +506,9 @@ describe('Inventory API (e2e)', () => {
 
       expect(priceFilterResponse.body.data.data).toBeInstanceOf(Array);
       expect(priceFilterResponse.body.data.data.length).toBe(1);
-      expect(priceFilterResponse.body.data.data[0].name).toBe('JavaScript Course');
+      expect(priceFilterResponse.body.data.data[0].name).toBe(
+        'JavaScript Course',
+      );
     });
   });
 });
