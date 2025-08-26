@@ -1,14 +1,268 @@
 {
     "info": {
-        "_postman_id": "inventory-api-master",
-        "name": "Inventory API",
-        "description": "Complete API collection for Inventory Management System - Categories, Products, and Workflow Tests",
+        "_postman_id": "inventory-api-complete",
+        "name": "Inventory API - Complete Collection",
+        "description": "Complete API collection for Inventory Management System with JWT Authentication, Categories, Products, Search, and Workflow Tests",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{access_token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Auto-refresh token if expired",
+                    "if (pm.collectionVariables.get('access_token') && pm.collectionVariables.get('refresh_token')) {",
+                    "    const currentTime = Math.floor(Date.now() / 1000);",
+                    "    const tokenExpiry = pm.collectionVariables.get('token_expiry') || 0;",
+                    "    ",
+                    "    if (currentTime >= tokenExpiry - 60) {",
+                    "        console.log('Token expired, refreshing...');",
+                    "        const refreshToken = pm.collectionVariables.get('refresh_token');",
+                    "        ",
+                    "        pm.sendRequest({",
+                    "            url: pm.collectionVariables.get('base_url') + '/auth/refresh',",
+                    "            method: 'POST',",
+                    "            header: { 'Content-Type': 'application/json' },",
+                    "            body: { mode: 'raw', raw: JSON.stringify({ refreshToken: refreshToken }) }",
+                    "        }, function (err, response) {",
+                    "            if (!err && response.code === 200) {",
+                    "                const responseJson = response.json();",
+                    "                pm.collectionVariables.set('access_token', responseJson.accessToken);",
+                    "                pm.collectionVariables.set('refresh_token', responseJson.refreshToken);",
+                    "                pm.collectionVariables.set('token_expiry', Math.floor(Date.now() / 1000) + 900);",
+                    "                console.log('Token refreshed successfully');",
+                    "            }",
+                    "        });",
+                    "    }",
+                    "}"
+                ]
+            }
+        }
+    ],
     "item": [
         {
+            "name": "Authentication",
+            "description": "JWT Authentication endpoints - Register, Login, Refresh, Profile, Logout",
+            "item": [
+                {
+                    "name": "Register User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 201', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has access token and user', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('accessToken');",
+                                    "    pm.expect(responseJson).to.have.property('refreshToken');",
+                                    "    pm.expect(responseJson).to.have.property('user');",
+                                    "    pm.expect(responseJson.user).to.have.property('role');",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 201) {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.collectionVariables.set('access_token', responseJson.accessToken);",
+                                    "    pm.collectionVariables.set('refresh_token', responseJson.refreshToken);",
+                                    "    pm.collectionVariables.set('token_expiry', Math.floor(Date.now() / 1000) + 900);",
+                                    "    pm.collectionVariables.set('user_id', responseJson.user.id);",
+                                    "    console.log('🎉 User registered successfully - Tokens saved');",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": { "type": "noauth" },
+                        "method": "POST",
+                        "header": [{ "key": "Content-Type", "value": "application/json" }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/register",
+                            "host": ["{{base_url}}"],
+                            "path": ["auth", "register"]
+                        }
+                    }
+                },
+                {
+                    "name": "Login User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has access token and user', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('accessToken');",
+                                    "    pm.expect(responseJson).to.have.property('refreshToken');",
+                                    "    pm.expect(responseJson).to.have.property('user');",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200) {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.collectionVariables.set('access_token', responseJson.accessToken);",
+                                    "    pm.collectionVariables.set('refresh_token', responseJson.refreshToken);",
+                                    "    pm.collectionVariables.set('token_expiry', Math.floor(Date.now() / 1000) + 900);",
+                                    "    pm.collectionVariables.set('user_id', responseJson.user.id);",
+                                    "    console.log('✅ User logged in successfully');",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": { "type": "noauth" },
+                        "method": "POST",
+                        "header": [{ "key": "Content-Type", "value": "application/json" }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/login",
+                            "host": ["{{base_url}}"],
+                            "path": ["auth", "login"]
+                        }
+                    }
+                },
+                {
+                    "name": "Refresh Token",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has new tokens', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('accessToken');",
+                                    "    pm.expect(responseJson).to.have.property('refreshToken');",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200) {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.collectionVariables.set('access_token', responseJson.accessToken);",
+                                    "    pm.collectionVariables.set('refresh_token', responseJson.refreshToken);",
+                                    "    pm.collectionVariables.set('token_expiry', Math.floor(Date.now() / 1000) + 900);",
+                                    "    console.log('🔄 Tokens refreshed successfully');",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": { "type": "noauth" },
+                        "method": "POST",
+                        "header": [{ "key": "Content-Type", "value": "application/json" }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/refresh",
+                            "host": ["{{base_url}}"],
+                            "path": ["auth", "refresh"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Profile",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has user profile', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('user');",
+                                    "    pm.expect(responseJson.user).to.have.property('id');",
+                                    "    pm.expect(responseJson.user).to.have.property('email');",
+                                    "    pm.expect(responseJson.user).to.have.property('role');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/auth/profile",
+                            "host": ["{{base_url}}"],
+                            "path": ["auth", "profile"]
+                        }
+                    }
+                },
+                {
+                    "name": "Logout",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200) {",
+                                    "    pm.collectionVariables.unset('access_token');",
+                                    "    pm.collectionVariables.unset('refresh_token');",
+                                    "    pm.collectionVariables.unset('token_expiry');",
+                                    "    pm.collectionVariables.unset('user_id');",
+                                    "    console.log('👋 User logged out - Tokens cleared');",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/auth/logout",
+                            "host": ["{{base_url}}"],
+                            "path": ["auth", "logout"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
             "name": "Categories Management",
-            "description": "Endpoints for managing product categories",
+            "description": "CRUD operations for inventory categories",
             "item": [
                 {
                     "name": "Create Category",
@@ -17,12 +271,21 @@
                             "listen": "test",
                             "script": {
                                 "exec": [
+                                    "pm.test('Status code is 201', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has created category', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('category');",
+                                    "    pm.expect(responseJson.category).to.have.property('id');",
+                                    "    pm.expect(responseJson.category).to.have.property('name');",
+                                    "});",
+                                    "",
                                     "if (pm.response.code === 201) {",
                                     "    const responseJson = pm.response.json();",
-                                    "    if (responseJson.success && responseJson.data && responseJson.data.id) {",
-                                    "        pm.collectionVariables.set('category_id', responseJson.data.id);",
-                                    "        console.log('Category ID saved:', responseJson.data.id);",
-                                    "    }",
+                                    "    pm.collectionVariables.set('category_id', responseJson.category.id);",
+                                    "    console.log('📁 Category created: ' + responseJson.category.name);",
                                     "}"
                                 ],
                                 "type": "text/javascript"
@@ -31,231 +294,208 @@
                     ],
                     "request": {
                         "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
+                        "header": [{ "key": "Content-Type", "value": "application/json" }],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"name\": \"Electronics\",\n  \"description\": \"Electronic devices, gadgets, and components for modern technology needs\",\n  \"isActive\": true\n}"
+                            "raw": "{\n  \"name\": \"Electronics\",\n  \"description\": \"Electronic devices and components\",\n  \"icon\": \"🔌\"\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/categories",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "categories"
-                            ]
+                            "host": ["{{base_url}}"],
+                            "path": ["categories"]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Get All Categories",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/categories",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "categories"
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Get Categories with Pagination",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/categories?page=1&limit=10&sort=name&order=asc",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "categories"
-                            ],
-                            "query": [
-                                {
-                                    "key": "page",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "limit",
-                                    "value": "10"
-                                },
-                                {
-                                    "key": "sort",
-                                    "value": "name"
-                                },
-                                {
-                                    "key": "order",
-                                    "value": "asc"
-                                }
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Get Category by ID",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/categories/{{category_id}}",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "categories",
-                                "{{category_id}}"
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Get Category by Slug",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/categories/slug/electronics",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "categories",
-                                "slug",
-                                "electronics"
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Get Category Search Suggestions",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/categories/search/suggestions?q=elec&limit=5",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "categories",
-                                "search",
-                                "suggestions"
-                            ],
-                            "query": [
-                                {
-                                    "key": "q",
-                                    "value": "elec",
-                                    "description": "Search query"
-                                },
-                                {
-                                    "key": "limit",
-                                    "value": "5",
-                                    "description": "Maximum number of suggestions"
-                                }
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Update Category",
-                    "request": {
-                        "method": "PATCH",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"name\": \"Electronics & Gadgets\",\n  \"description\": \"Updated: Electronic devices, gadgets, and modern technology components\",\n  \"isActive\": true\n}"
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/categories/{{category_id}}",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "categories",
-                                "{{category_id}}"
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Soft Delete Category",
-                    "request": {
-                        "method": "DELETE",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/categories/{{category_id}}",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "categories",
-                                "{{category_id}}"
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Hard Delete Category",
-                    "request": {
-                        "method": "DELETE",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/categories/{{category_id}}/hard",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "categories",
-                                "{{category_id}}",
-                                "hard"
-                            ]
-                        }
-                    },
-                    "response": []
-                }
-            ]
-        },
-        {
-            "name": "Products Management",
-            "description": "Endpoints for managing products and inventory",
-            "item": [
-                {
-                    "name": "Create Product - Laptop",
                     "event": [
                         {
                             "listen": "test",
                             "script": {
                                 "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has categories array', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('categories');",
+                                    "    pm.expect(responseJson.categories).to.be.an('array');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/categories",
+                            "host": ["{{base_url}}"],
+                            "path": ["categories"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Category by ID",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has category details', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('category');",
+                                    "    pm.expect(responseJson.category).to.have.property('id');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/categories/{{category_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["categories", "{{category_id}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Category",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has updated category', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('category');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PATCH",
+                        "header": [{ "key": "Content-Type", "value": "application/json" }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Electronics & Gadgets\",\n  \"description\": \"Electronic devices, gadgets, and components\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/categories/{{category_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["categories", "{{category_id}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "Search Categories",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has search results', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('categories');",
+                                    "    pm.expect(responseJson).to.have.property('total');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/categories?name=electronics&page=1&limit=10",
+                            "host": ["{{base_url}}"],
+                            "path": ["categories"],
+                            "query": [
+                                { "key": "name", "value": "electronics" },
+                                { "key": "page", "value": "1" },
+                                { "key": "limit", "value": "10" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Category",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response confirms deletion', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('message');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/categories/{{category_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["categories", "{{category_id}}"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Products Management",
+            "description": "CRUD operations for product inventory",
+            "item": [
+                {
+                    "name": "Create Product",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 201', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has created product', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('product');",
+                                    "    pm.expect(responseJson.product).to.have.property('id');",
+                                    "    pm.expect(responseJson.product).to.have.property('sku');",
+                                    "});",
+                                    "",
                                     "if (pm.response.code === 201) {",
                                     "    const responseJson = pm.response.json();",
-                                    "    if (responseJson.success && responseJson.data && responseJson.data.id) {",
-                                    "        pm.collectionVariables.set('product_id', responseJson.data.id);",
-                                    "        console.log('Product ID saved:', responseJson.data.id);",
-                                    "    }",
+                                    "    pm.collectionVariables.set('product_id', responseJson.product.id);",
+                                    "    console.log('📦 Product created: ' + responseJson.product.name);",
                                     "}"
                                 ],
                                 "type": "text/javascript"
@@ -264,1275 +504,706 @@
                     ],
                     "request": {
                         "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
+                        "header": [{ "key": "Content-Type", "value": "application/json" }],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"name\": \"MacBook Pro 16-inch\",\n  \"description\": \"Apple MacBook Pro with M2 Pro chip, 16-inch Liquid Retina XDR display, 16GB memory, 512GB SSD storage\",\n  \"price\": 2499.99,\n  \"sku\": \"MBP16-M2PRO-512\",\n  \"quantity\": 25,\n  \"lowStockThreshold\": 5,\n  \"categoryId\": \"{{category_id}}\",\n  \"brand\": \"Apple\",\n  \"tags\": [\"laptop\", \"macbook\", \"professional\", \"m2\"],\n  \"images\": [\n    \"https://example.com/macbook-pro-1.jpg\",\n    \"https://example.com/macbook-pro-2.jpg\"\n  ],\n  \"specifications\": {\n    \"processor\": \"Apple M2 Pro chip\",\n    \"memory\": \"16GB unified memory\",\n    \"storage\": \"512GB SSD\",\n    \"display\": \"16-inch Liquid Retina XDR\",\n    \"graphics\": \"19-core GPU\",\n    \"weight\": \"2.15 kg\",\n    \"color\": \"Space Gray\"\n  },\n  \"isActive\": true,\n  \"isFeatured\": true\n}"
+                            "raw": "{\n  \"name\": \"iPhone 15 Pro\",\n  \"description\": \"Latest iPhone with A17 Pro chip and advanced camera system\",\n  \"sku\": \"IPH15PRO128\",\n  \"price\": 999.99,\n  \"quantity\": 50,\n  \"lowStockThreshold\": 10,\n  \"categoryId\": \"{{category_id}}\",\n  \"brand\": \"Apple\",\n  \"tags\": [\"smartphone\", \"apple\", \"5g\", \"premium\"],\n  \"specifications\": {\n    \"CPU\": \"A17 Pro\",\n    \"Storage\": \"128GB\",\n    \"Display\": \"6.1-inch Super Retina XDR\",\n    \"Camera\": \"48MP Main + 12MP Ultra Wide + 12MP Telephoto\"\n  },\n  \"isActive\": true,\n  \"isFeatured\": true\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/products",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products"
-                            ]
+                            "host": ["{{base_url}}"],
+                            "path": ["products"]
                         }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Create Product - Smartphone",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"name\": \"iPhone 15 Pro\",\n  \"description\": \"iPhone 15 Pro with A17 Pro chip, Pro camera system, and titanium design\",\n  \"price\": 999.99,\n  \"sku\": \"IPH15-PRO-128\",\n  \"quantity\": 3,\n  \"lowStockThreshold\": 5,\n  \"categoryId\": \"{{category_id}}\",\n  \"brand\": \"Apple\",\n  \"tags\": [\"smartphone\", \"iphone\", \"pro\", \"a17\"],\n  \"specifications\": {\n    \"processor\": \"A17 Pro chip\",\n    \"storage\": \"128GB\",\n    \"display\": \"6.1-inch Super Retina XDR\",\n    \"camera\": \"Pro camera system\",\n    \"material\": \"Titanium\",\n    \"color\": \"Natural Titanium\"\n  },\n  \"isActive\": true,\n  \"isFeatured\": false\n}"
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/products",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products"
-                            ]
-                        }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Get All Products",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/products",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products"
-                            ]
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has products array', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('products');",
+                                    "    pm.expect(responseJson.products).to.be.an('array');",
+                                    "    pm.expect(responseJson).to.have.property('total');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
                         }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Get Products with Pagination & Sorting",
+                    ],
                     "request": {
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{base_url}}/products?page=1&limit=5&sort=price&order=desc",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products"
-                            ],
+                            "raw": "{{base_url}}/products?page=1&limit=10",
+                            "host": ["{{base_url}}"],
+                            "path": ["products"],
                             "query": [
-                                {
-                                    "key": "page",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "limit",
-                                    "value": "5"
-                                },
-                                {
-                                    "key": "sort",
-                                    "value": "price"
-                                },
-                                {
-                                    "key": "order",
-                                    "value": "desc"
-                                }
+                                { "key": "page", "value": "1" },
+                                { "key": "limit", "value": "10" }
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Get Product by ID",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has product details', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('product');",
+                                    "    pm.expect(responseJson.product).to.have.property('id');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "GET",
                         "header": [],
                         "url": {
                             "raw": "{{base_url}}/products/{{product_id}}",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products",
-                                "{{product_id}}"
-                            ]
+                            "host": ["{{base_url}}"],
+                            "path": ["products", "{{product_id}}"]
                         }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Get Product by SKU",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/products/sku/MBP16-M2PRO-512",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products",
-                                "sku",
-                                "MBP16-M2PRO-512"
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Get Products by Category",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/products/category/{{category_id}}",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products",
-                                "category",
-                                "{{category_id}}"
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Get Low Stock Products",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/products/low-stock",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products",
-                                "low-stock"
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Get Featured Products",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/products?isFeatured=true",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products"
-                            ],
-                            "query": [
-                                {
-                                    "key": "isFeatured",
-                                    "value": "true"
-                                }
-                            ]
-                        }
-                    },
-                    "response": []
+                    }
                 },
                 {
                     "name": "Update Product",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has updated product', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('product');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "PATCH",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
+                        "header": [{ "key": "Content-Type", "value": "application/json" }],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"name\": \"MacBook Pro 16-inch (Updated)\",\n  \"price\": 2399.99,\n  \"description\": \"Updated: Apple MacBook Pro with M2 Pro chip, now with enhanced performance\",\n  \"isFeatured\": true\n}"
+                            "raw": "{\n  \"price\": 899.99,\n  \"quantity\": 75,\n  \"description\": \"Latest iPhone 15 Pro with A17 Pro chip and advanced camera system - Now with reduced price!\",\n  \"isFeatured\": true\n}"
                         },
                         "url": {
                             "raw": "{{base_url}}/products/{{product_id}}",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products",
-                                "{{product_id}}"
-                            ]
+                            "host": ["{{base_url}}"],
+                            "path": ["products", "{{product_id}}"]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
-                    "name": "Update Product Stock",
-                    "request": {
-                        "method": "PATCH",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
+                    "name": "Delete Product",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response confirms deletion', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('message');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
                             }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"quantity\": 50\n}"
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/products/{{product_id}}/stock",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products",
-                                "{{product_id}}",
-                                "stock"
-                            ]
                         }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Soft Delete Product",
+                    ],
                     "request": {
                         "method": "DELETE",
                         "header": [],
                         "url": {
                             "raw": "{{base_url}}/products/{{product_id}}",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products",
-                                "{{product_id}}"
-                            ]
+                            "host": ["{{base_url}}"],
+                            "path": ["products", "{{product_id}}"]
                         }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Hard Delete Product",
-                    "request": {
-                        "method": "DELETE",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/products/{{product_id}}/hard",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products",
-                                "{{product_id}}",
-                                "hard"
-                            ]
-                        }
-                    },
-                    "response": []
+                    }
                 }
             ]
         },
         {
             "name": "Search & Filters",
-            "description": "Advanced search and filtering endpoints",
+            "description": "Advanced search functionality with filters and sorting",
             "item": [
                 {
-                    "name": "Search Products (Advanced)",
+                    "name": "Search Products",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has search results', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('products');",
+                                    "    pm.expect(responseJson).to.have.property('total');",
+                                    "    pm.expect(responseJson).to.have.property('page');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{base_url}}/products/search?q=macbook&page=1&limit=5&sortBy=relevance",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products",
-                                "search"
-                            ],
+                            "raw": "{{base_url}}/products/search?q=iPhone&page=1&limit=10&sortBy=price&sortOrder=desc",
+                            "host": ["{{base_url}}"],
+                            "path": ["products", "search"],
                             "query": [
-                                {
-                                    "key": "q",
-                                    "value": "macbook",
-                                    "description": "Text search query"
-                                },
-                                {
-                                    "key": "page",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "limit",
-                                    "value": "5"
-                                },
-                                {
-                                    "key": "sortBy",
-                                    "value": "relevance",
-                                    "description": "Sort by: relevance, price, name, createdAt, quantity"
-                                }
+                                { "key": "q", "value": "iPhone" },
+                                { "key": "page", "value": "1" },
+                                { "key": "limit", "value": "10" },
+                                { "key": "sortBy", "value": "price" },
+                                { "key": "sortOrder", "value": "desc" }
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
-                    "name": "Search Products with Price Filter",
+                    "name": "Filter by Category",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has filtered products', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('products');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{base_url}}/products/search?minPrice=500&maxPrice=2000&sortBy=price&order=asc",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products",
-                                "search"
-                            ],
+                            "raw": "{{base_url}}/products/search?categoryId={{category_id}}&page=1&limit=10",
+                            "host": ["{{base_url}}"],
+                            "path": ["products", "search"],
                             "query": [
-                                {
-                                    "key": "minPrice",
-                                    "value": "500"
-                                },
-                                {
-                                    "key": "maxPrice",
-                                    "value": "2000"
-                                },
-                                {
-                                    "key": "sortBy",
-                                    "value": "price"
-                                },
-                                {
-                                    "key": "order",
-                                    "value": "asc"
-                                }
+                                { "key": "categoryId", "value": "{{category_id}}" },
+                                { "key": "page", "value": "1" },
+                                { "key": "limit", "value": "10" }
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
-                    "name": "Search Products by Brand & Category",
+                    "name": "Filter by Price Range",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Products are within price range', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    if (responseJson.products && responseJson.products.length > 0) {",
+                                    "        responseJson.products.forEach(product => {",
+                                    "            pm.expect(product.price).to.be.at.least(500);",
+                                    "            pm.expect(product.price).to.be.at.most(1500);",
+                                    "        });",
+                                    "    }",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{base_url}}/products/search?brand=Apple&categoryId={{category_id}}&isFeatured=true",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products",
-                                "search"
-                            ],
+                            "raw": "{{base_url}}/products/search?minPrice=500&maxPrice=1500&page=1&limit=10",
+                            "host": ["{{base_url}}"],
+                            "path": ["products", "search"],
                             "query": [
-                                {
-                                    "key": "brand",
-                                    "value": "Apple"
-                                },
-                                {
-                                    "key": "categoryId",
-                                    "value": "{{category_id}}"
-                                },
-                                {
-                                    "key": "isFeatured",
-                                    "value": "true"
-                                }
+                                { "key": "minPrice", "value": "500" },
+                                { "key": "maxPrice", "value": "1500" },
+                                { "key": "page", "value": "1" },
+                                { "key": "limit", "value": "10" }
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
-                    "name": "Search Products by Tags",
+                    "name": "Filter by Active Products",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Products match active status', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    if (responseJson.products && responseJson.products.length > 0) {",
+                                    "        responseJson.products.forEach(product => {",
+                                    "            pm.expect(product.isActive).to.equal(true);",
+                                    "        });",
+                                    "    }",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{base_url}}/products/search?tags=laptop,professional&sortBy=name",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products",
-                                "search"
-                            ],
+                            "raw": "{{base_url}}/products/search?isActive=true&page=1&limit=10",
+                            "host": ["{{base_url}}"],
+                            "path": ["products", "search"],
                             "query": [
-                                {
-                                    "key": "tags",
-                                    "value": "laptop,professional",
-                                    "description": "Comma-separated tags"
-                                },
-                                {
-                                    "key": "sortBy",
-                                    "value": "name"
-                                }
+                                { "key": "isActive", "value": "true" },
+                                { "key": "page", "value": "1" },
+                                { "key": "limit", "value": "10" }
                             ]
                         }
-                    },
-                    "response": []
+                    }
                 },
                 {
-                    "name": "Get Search Suggestions",
+                    "name": "Advanced Combined Search",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Advanced search returns results', function () {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('products');",
+                                    "    pm.expect(responseJson).to.have.property('total');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{base_url}}/products/search/suggestions?q=mac&limit=10",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products",
-                                "search",
-                                "suggestions"
-                            ],
+                            "raw": "{{base_url}}/products/search?q=phone&categoryId={{category_id}}&minPrice=300&maxPrice=2000&isActive=true&tags=smartphone&brand=Apple&sortBy=price&sortOrder=asc&page=1&limit=5",
+                            "host": ["{{base_url}}"],
+                            "path": ["products", "search"],
                             "query": [
-                                {
-                                    "key": "q",
-                                    "value": "mac"
-                                },
-                                {
-                                    "key": "limit",
-                                    "value": "10"
-                                }
+                                { "key": "q", "value": "phone" },
+                                { "key": "categoryId", "value": "{{category_id}}" },
+                                { "key": "minPrice", "value": "300" },
+                                { "key": "maxPrice", "value": "2000" },
+                                { "key": "isActive", "value": "true" },
+                                { "key": "tags", "value": "smartphone" },
+                                { "key": "brand", "value": "Apple" },
+                                { "key": "sortBy", "value": "price" },
+                                { "key": "sortOrder", "value": "asc" },
+                                { "key": "page", "value": "1" },
+                                { "key": "limit", "value": "5" }
                             ]
                         }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Get Search Filters",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/products/search/filters",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products",
-                                "search",
-                                "filters"
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Filter Products by Price Range (Basic)",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/products?minPrice=500&maxPrice=2000&sort=price&order=asc",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products"
-                            ],
-                            "query": [
-                                {
-                                    "key": "minPrice",
-                                    "value": "500"
-                                },
-                                {
-                                    "key": "maxPrice",
-                                    "value": "2000"
-                                },
-                                {
-                                    "key": "sort",
-                                    "value": "price"
-                                },
-                                {
-                                    "key": "order",
-                                    "value": "asc"
-                                }
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Filter Products by Brand (Basic)",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/products?brand=Apple&isFeatured=true",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "products"
-                            ],
-                            "query": [
-                                {
-                                    "key": "brand",
-                                    "value": "Apple"
-                                },
-                                {
-                                    "key": "isFeatured",
-                                    "value": "true"
-                                }
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Search Categories",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/categories?q=electronic&page=1&limit=5",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "categories"
-                            ],
-                            "query": [
-                                {
-                                    "key": "q",
-                                    "value": "electronic"
-                                },
-                                {
-                                    "key": "page",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "limit",
-                                    "value": "5"
-                                }
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Get Category Search Suggestions",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/categories/search/suggestions?q=elec&limit=5",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "categories",
-                                "search",
-                                "suggestions"
-                            ],
-                            "query": [
-                                {
-                                    "key": "q",
-                                    "value": "elec"
-                                },
-                                {
-                                    "key": "limit",
-                                    "value": "5"
-                                }
-                            ]
-                        }
-                    },
-                    "response": []
+                    }
                 }
             ]
         },
         {
-            "name": "Workflow Tests",
-            "description": "Automated test sequences for validating API functionality",
+            "name": "Complete Workflow Tests",
+            "description": "End-to-end testing scenarios simulating real-world usage",
             "item": [
                 {
-                    "name": "Complete Product Lifecycle Test",
-                    "item": [
+                    "name": "01 - User Registration & Login",
+                    "event": [
                         {
-                            "name": "1. Create Test Category",
-                            "event": [
-                                {
-                                    "listen": "test",
-                                    "script": {
-                                        "exec": [
-                                            "pm.test('Category created successfully', function () {",
-                                            "    pm.response.to.have.status(201);",
-                                            "    const responseJson = pm.response.json();",
-                                            "    pm.expect(responseJson.success).to.be.true;",
-                                            "    pm.expect(responseJson.data).to.have.property('id');",
-                                            "    pm.collectionVariables.set('test_category_id', responseJson.data.id);",
-                                            "    console.log('✅ Test category created:', responseJson.data.id);",
-                                            "});"
-                                        ],
-                                        "type": "text/javascript"
-                                    }
-                                }
-                            ],
-                            "request": {
-                                "method": "POST",
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    }
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('User workflow - Registration successful', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('accessToken');",
+                                    "    pm.expect(responseJson).to.have.property('user');",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 201) {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.collectionVariables.set('workflow_access_token', responseJson.accessToken);",
+                                    "    pm.collectionVariables.set('workflow_refresh_token', responseJson.refreshToken);",
+                                    "    pm.collectionVariables.set('workflow_user_id', responseJson.user.id);",
+                                    "    console.log('🎉 Workflow user registered successfully');",
+                                    "}"
                                 ],
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"name\": \"Test Electronics\",\n  \"description\": \"Electronics category for testing workflow\",\n  \"isActive\": true\n}"
-                                },
-                                "url": {
-                                    "raw": "{{base_url}}/categories",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "categories"
-                                    ]
-                                }
-                            },
-                            "response": []
-                        },
-                        {
-                            "name": "2. Create Low Stock Product",
-                            "event": [
-                                {
-                                    "listen": "test",
-                                    "script": {
-                                        "exec": [
-                                            "pm.test('Product created successfully', function () {",
-                                            "    pm.response.to.have.status(201);",
-                                            "    const responseJson = pm.response.json();",
-                                            "    pm.expect(responseJson.success).to.be.true;",
-                                            "    pm.expect(responseJson.data).to.have.property('id');",
-                                            "    pm.expect(responseJson.data.isLowStock).to.be.true;",
-                                            "    pm.collectionVariables.set('test_product_id', responseJson.data.id);",
-                                            "    console.log('✅ Low stock product created:', responseJson.data.id);",
-                                            "});"
-                                        ],
-                                        "type": "text/javascript"
-                                    }
-                                }
-                            ],
-                            "request": {
-                                "method": "POST",
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    }
-                                ],
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"name\": \"Test Wireless Headphones\",\n  \"description\": \"High-quality wireless headphones for testing workflow\",\n  \"price\": 199.99,\n  \"sku\": \"TEST-HEADPHONES-WF-001\",\n  \"quantity\": 2,\n  \"lowStockThreshold\": 5,\n  \"categoryId\": \"{{test_category_id}}\",\n  \"brand\": \"TestBrand\",\n  \"tags\": [\"headphones\", \"wireless\", \"test\", \"audio\"],\n  \"specifications\": {\n    \"connectivity\": \"Bluetooth 5.0\",\n    \"batteryLife\": \"30 hours\",\n    \"drivers\": \"40mm dynamic\",\n    \"weight\": \"250g\",\n    \"color\": \"Black\"\n  },\n  \"isActive\": true,\n  \"isFeatured\": false\n}"
-                                },
-                                "url": {
-                                    "raw": "{{base_url}}/products",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "products"
-                                    ]
-                                }
-                            },
-                            "response": []
-                        },
-                        {
-                            "name": "3. Verify Low Stock Detection",
-                            "event": [
-                                {
-                                    "listen": "test",
-                                    "script": {
-                                        "exec": [
-                                            "pm.test('Low stock product detected', function () {",
-                                            "    pm.response.to.have.status(200);",
-                                            "    const responseJson = pm.response.json();",
-                                            "    pm.expect(responseJson.success).to.be.true;",
-                                            "    pm.expect(responseJson.data.data).to.be.an('array');",
-                                            "    pm.expect(responseJson.data.data.length).to.be.greaterThan(0);",
-                                            "    console.log('✅ Low stock products found:', responseJson.data.data.length);",
-                                            "});"
-                                        ],
-                                        "type": "text/javascript"
-                                    }
-                                }
-                            ],
-                            "request": {
-                                "method": "GET",
-                                "header": [],
-                                "url": {
-                                    "raw": "{{base_url}}/products/low-stock",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "products",
-                                        "low-stock"
-                                    ]
-                                }
-                            },
-                            "response": []
-                        },
-                        {
-                            "name": "4. Update Stock to Normal Level",
-                            "event": [
-                                {
-                                    "listen": "test",
-                                    "script": {
-                                        "exec": [
-                                            "pm.test('Stock updated successfully', function () {",
-                                            "    pm.response.to.have.status(200);",
-                                            "    const responseJson = pm.response.json();",
-                                            "    pm.expect(responseJson.success).to.be.true;",
-                                            "    pm.expect(responseJson.data.quantity).to.equal(20);",
-                                            "    pm.expect(responseJson.data.isLowStock).to.be.false;",
-                                            "    console.log('✅ Stock updated successfully to:', responseJson.data.quantity);",
-                                            "});"
-                                        ],
-                                        "type": "text/javascript"
-                                    }
-                                }
-                            ],
-                            "request": {
-                                "method": "PATCH",
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    }
-                                ],
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"quantity\": 20\n}"
-                                },
-                                "url": {
-                                    "raw": "{{base_url}}/products/{{test_product_id}}/stock",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "products",
-                                        "{{test_product_id}}",
-                                        "stock"
-                                    ]
-                                }
-                            },
-                            "response": []
-                        },
-                        {
-                            "name": "5. Update Product Details",
-                            "event": [
-                                {
-                                    "listen": "test",
-                                    "script": {
-                                        "exec": [
-                                            "pm.test('Product updated successfully', function () {",
-                                            "    pm.response.to.have.status(200);",
-                                            "    const responseJson = pm.response.json();",
-                                            "    pm.expect(responseJson.success).to.be.true;",
-                                            "    pm.expect(responseJson.data.isFeatured).to.be.true;",
-                                            "    console.log('✅ Product updated successfully');",
-                                            "});"
-                                        ],
-                                        "type": "text/javascript"
-                                    }
-                                }
-                            ],
-                            "request": {
-                                "method": "PATCH",
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    }
-                                ],
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"name\": \"Test Premium Wireless Headphones\",\n  \"price\": 249.99,\n  \"description\": \"Updated: Premium wireless headphones with enhanced features\",\n  \"isFeatured\": true\n}"
-                                },
-                                "url": {
-                                    "raw": "{{base_url}}/products/{{test_product_id}}",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "products",
-                                        "{{test_product_id}}"
-                                    ]
-                                }
-                            },
-                            "response": []
-                        },
-                        {
-                            "name": "6. Clean Up - Delete Test Product",
-                            "event": [
-                                {
-                                    "listen": "test",
-                                    "script": {
-                                        "exec": [
-                                            "pm.test('Product deleted successfully', function () {",
-                                            "    pm.response.to.have.status(200);",
-                                            "    const responseJson = pm.response.json();",
-                                            "    pm.expect(responseJson.success).to.be.true;",
-                                            "    console.log('✅ Test product deleted successfully');",
-                                            "});"
-                                        ],
-                                        "type": "text/javascript"
-                                    }
-                                }
-                            ],
-                            "request": {
-                                "method": "DELETE",
-                                "header": [],
-                                "url": {
-                                    "raw": "{{base_url}}/products/{{test_product_id}}",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "products",
-                                        "{{test_product_id}}"
-                                    ]
-                                }
-                            },
-                            "response": []
-                        },
-                        {
-                            "name": "7. Clean Up - Delete Test Category",
-                            "event": [
-                                {
-                                    "listen": "test",
-                                    "script": {
-                                        "exec": [
-                                            "pm.test('Category deleted successfully', function () {",
-                                            "    pm.response.to.have.status(200);",
-                                            "    const responseJson = pm.response.json();",
-                                            "    pm.expect(responseJson.success).to.be.true;",
-                                            "    console.log('✅ Test category deleted successfully');",
-                                            "    console.log('🎉 Complete workflow test finished!');",
-                                            "});"
-                                        ],
-                                        "type": "text/javascript"
-                                    }
-                                }
-                            ],
-                            "request": {
-                                "method": "DELETE",
-                                "header": [],
-                                "url": {
-                                    "raw": "{{base_url}}/categories/{{test_category_id}}",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "categories",
-                                        "{{test_category_id}}"
-                                    ]
-                                }
-                            },
-                            "response": []
+                                "type": "text/javascript"
+                            }
                         }
-                    ]
+                    ],
+                    "request": {
+                        "auth": { "type": "noauth" },
+                        "method": "POST",
+                        "header": [{ "key": "Content-Type", "value": "application/json" }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Workflow Test User\",\n  \"email\": \"workflow@test.com\",\n  \"password\": \"WorkflowTest123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/register",
+                            "host": ["{{base_url}}"],
+                            "path": ["auth", "register"]
+                        }
+                    }
                 },
                 {
-                    "name": "Search System Tests",
-                    "item": [
+                    "name": "02 - Create Test Category",
+                    "event": [
                         {
-                            "name": "1. Test Search Filters Endpoint",
-                            "event": [
-                                {
-                                    "listen": "test",
-                                    "script": {
-                                        "exec": [
-                                            "pm.test('Search filters retrieved successfully', function () {",
-                                            "    pm.response.to.have.status(200);",
-                                            "    const responseJson = pm.response.json();",
-                                            "    pm.expect(responseJson.success).to.be.true;",
-                                            "    pm.expect(responseJson.data).to.have.property('brands');",
-                                            "    pm.expect(responseJson.data).to.have.property('categories');",
-                                            "    pm.expect(responseJson.data).to.have.property('priceRange');",
-                                            "    pm.expect(responseJson.data).to.have.property('tags');",
-                                            "    console.log('✅ Search filters working correctly');",
-                                            "});"
-                                        ],
-                                        "type": "text/javascript"
-                                    }
-                                }
-                            ],
-                            "request": {
-                                "method": "GET",
-                                "header": [],
-                                "url": {
-                                    "raw": "{{base_url}}/products/search/filters",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "products",
-                                        "search",
-                                        "filters"
-                                    ]
-                                }
-                            },
-                            "response": []
-                        },
-                        {
-                            "name": "2. Test Text Search",
-                            "event": [
-                                {
-                                    "listen": "test",
-                                    "script": {
-                                        "exec": [
-                                            "pm.test('Text search working correctly', function () {",
-                                            "    pm.response.to.have.status(200);",
-                                            "    const responseJson = pm.response.json();",
-                                            "    pm.expect(responseJson.success).to.be.true;",
-                                            "    pm.expect(responseJson.data).to.have.property('data');",
-                                            "    pm.expect(responseJson.data).to.have.property('pagination');",
-                                            "    console.log('✅ Text search working correctly');",
-                                            "});"
-                                        ],
-                                        "type": "text/javascript"
-                                    }
-                                }
-                            ],
-                            "request": {
-                                "method": "GET",
-                                "header": [],
-                                "url": {
-                                    "raw": "{{base_url}}/products/search?q=macbook&sortBy=relevance",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "products",
-                                        "search"
-                                    ],
-                                    "query": [
-                                        {
-                                            "key": "q",
-                                            "value": "macbook"
-                                        },
-                                        {
-                                            "key": "sortBy",
-                                            "value": "relevance"
-                                        }
-                                    ]
-                                }
-                            },
-                            "response": []
-                        },
-                        {
-                            "name": "3. Test Price Range Filter",
-                            "event": [
-                                {
-                                    "listen": "test",
-                                    "script": {
-                                        "exec": [
-                                            "pm.test('Price range filter working correctly', function () {",
-                                            "    pm.response.to.have.status(200);",
-                                            "    const responseJson = pm.response.json();",
-                                            "    pm.expect(responseJson.success).to.be.true;",
-                                            "    ",
-                                            "    // Check if returned products are within price range",
-                                            "    responseJson.data.data.forEach(product => {",
-                                            "        pm.expect(product.price).to.be.within(1000, 3000);",
-                                            "    });",
-                                            "    console.log('✅ Price range filter working correctly');",
-                                            "});"
-                                        ],
-                                        "type": "text/javascript"
-                                    }
-                                }
-                            ],
-                            "request": {
-                                "method": "GET",
-                                "header": [],
-                                "url": {
-                                    "raw": "{{base_url}}/products/search?minPrice=1000&maxPrice=3000&sortBy=price&order=asc",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "products",
-                                        "search"
-                                    ],
-                                    "query": [
-                                        {
-                                            "key": "minPrice",
-                                            "value": "1000"
-                                        },
-                                        {
-                                            "key": "maxPrice",
-                                            "value": "3000"
-                                        },
-                                        {
-                                            "key": "sortBy",
-                                            "value": "price"
-                                        },
-                                        {
-                                            "key": "order",
-                                            "value": "asc"
-                                        }
-                                    ]
-                                }
-                            },
-                            "response": []
-                        },
-                        {
-                            "name": "4. Test Search Suggestions",
-                            "event": [
-                                {
-                                    "listen": "test",
-                                    "script": {
-                                        "exec": [
-                                            "pm.test('Search suggestions working correctly', function () {",
-                                            "    pm.response.to.have.status(200);",
-                                            "    const responseJson = pm.response.json();",
-                                            "    pm.expect(responseJson.success).to.be.true;",
-                                            "    pm.expect(responseJson.data).to.be.an('array');",
-                                            "    console.log('✅ Search suggestions working correctly');",
-                                            "    console.log('Suggestions found:', responseJson.data.length);",
-                                            "});"
-                                        ],
-                                        "type": "text/javascript"
-                                    }
-                                }
-                            ],
-                            "request": {
-                                "method": "GET",
-                                "header": [],
-                                "url": {
-                                    "raw": "{{base_url}}/products/search/suggestions?q=mac&limit=5",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "products",
-                                        "search",
-                                        "suggestions"
-                                    ],
-                                    "query": [
-                                        {
-                                            "key": "q",
-                                            "value": "mac"
-                                        },
-                                        {
-                                            "key": "limit",
-                                            "value": "5"
-                                        }
-                                    ]
-                                }
-                            },
-                            "response": []
-                        },
-                        {
-                            "name": "5. Test Category Search",
-                            "event": [
-                                {
-                                    "listen": "test",
-                                    "script": {
-                                        "exec": [
-                                            "pm.test('Category search working correctly', function () {",
-                                            "    pm.response.to.have.status(200);",
-                                            "    const responseJson = pm.response.json();",
-                                            "    pm.expect(responseJson.success).to.be.true;",
-                                            "    pm.expect(responseJson.data).to.have.property('data');",
-                                            "    pm.expect(responseJson.data).to.have.property('pagination');",
-                                            "    console.log('✅ Category search working correctly');",
-                                            "});"
-                                        ],
-                                        "type": "text/javascript"
-                                    }
-                                }
-                            ],
-                            "request": {
-                                "method": "GET",
-                                "header": [],
-                                "url": {
-                                    "raw": "{{base_url}}/categories?q=electronic",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "categories"
-                                    ],
-                                    "query": [
-                                        {
-                                            "key": "q",
-                                            "value": "electronic"
-                                        }
-                                    ]
-                                }
-                            },
-                            "response": []
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Workflow - Category creation successful', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson.category).to.have.property('name', 'Workflow Electronics');",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 201) {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.collectionVariables.set('workflow_category_id', responseJson.category.id);",
+                                    "    console.log('📁 Workflow category created');",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
                         }
-                    ]
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{ "key": "token", "value": "{{workflow_access_token}}", "type": "string" }]
+                        },
+                        "method": "POST",
+                        "header": [{ "key": "Content-Type", "value": "application/json" }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Workflow Electronics\",\n  \"description\": \"Electronics category for workflow testing\",\n  \"icon\": \"⚡\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/categories",
+                            "host": ["{{base_url}}"],
+                            "path": ["categories"]
+                        }
+                    }
                 },
                 {
-                    "name": "Quick Smoke Tests",
-                    "item": [
+                    "name": "03 - Create Test Product",
+                    "event": [
                         {
-                            "name": "Health Check - Categories",
-                            "event": [
-                                {
-                                    "listen": "test",
-                                    "script": {
-                                        "exec": [
-                                            "pm.test('Categories endpoint is healthy', function () {",
-                                            "    pm.response.to.have.status(200);",
-                                            "    const responseJson = pm.response.json();",
-                                            "    pm.expect(responseJson.success).to.be.true;",
-                                            "    console.log('✅ Categories endpoint healthy');",
-                                            "});"
-                                        ],
-                                        "type": "text/javascript"
-                                    }
-                                }
-                            ],
-                            "request": {
-                                "method": "GET",
-                                "header": [],
-                                "url": {
-                                    "raw": "{{base_url}}/categories",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "categories"
-                                    ]
-                                }
-                            },
-                            "response": []
-                        },
-                        {
-                            "name": "Health Check - Products",
-                            "event": [
-                                {
-                                    "listen": "test",
-                                    "script": {
-                                        "exec": [
-                                            "pm.test('Products endpoint is healthy', function () {",
-                                            "    pm.response.to.have.status(200);",
-                                            "    const responseJson = pm.response.json();",
-                                            "    pm.expect(responseJson.success).to.be.true;",
-                                            "    console.log('✅ Products endpoint healthy');",
-                                            "});"
-                                        ],
-                                        "type": "text/javascript"
-                                    }
-                                }
-                            ],
-                            "request": {
-                                "method": "GET",
-                                "header": [],
-                                "url": {
-                                    "raw": "{{base_url}}/products",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "products"
-                                    ]
-                                }
-                            },
-                            "response": []
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Workflow - Product creation successful', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson.product).to.have.property('name');",
+                                    "    pm.expect(responseJson.product).to.have.property('sku');",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 201) {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.collectionVariables.set('workflow_product_id', responseJson.product.id);",
+                                    "    console.log('📦 Workflow product created: ' + responseJson.product.name);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
                         }
-                    ]
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{ "key": "token", "value": "{{workflow_access_token}}", "type": "string" }]
+                        },
+                        "method": "POST",
+                        "header": [{ "key": "Content-Type", "value": "application/json" }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Workflow Laptop Pro\",\n  \"description\": \"High-performance laptop for workflow testing with amazing features\",\n  \"sku\": \"WF-LAPTOP-001\",\n  \"price\": 1299.99,\n  \"quantity\": 25,\n  \"lowStockThreshold\": 5,\n  \"categoryId\": \"{{workflow_category_id}}\",\n  \"brand\": \"WorkflowTech\",\n  \"tags\": [\"laptop\", \"professional\", \"workflow\"],\n  \"specifications\": {\n    \"CPU\": \"Intel i7\",\n    \"RAM\": \"16GB\",\n    \"Storage\": \"512GB SSD\",\n    \"Display\": \"15.6-inch FHD\"\n  },\n  \"isActive\": true,\n  \"isFeatured\": false\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/products",
+                            "host": ["{{base_url}}"],
+                            "path": ["products"]
+                        }
+                    }
+                },
+                {
+                    "name": "04 - Test Search Functionality",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Workflow - Search functionality working', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson).to.have.property('products');",
+                                    "    pm.expect(responseJson).to.have.property('total');",
+                                    "});",
+                                    "",
+                                    "console.log('🔍 Search functionality verified successfully');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{ "key": "token", "value": "{{workflow_access_token}}", "type": "string" }]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/products/search?q=workflow&categoryId={{workflow_category_id}}&isActive=true",
+                            "host": ["{{base_url}}"],
+                            "path": ["products", "search"],
+                            "query": [
+                                { "key": "q", "value": "workflow" },
+                                { "key": "categoryId", "value": "{{workflow_category_id}}" },
+                                { "key": "isActive", "value": "true" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "05 - Update Product Inventory",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Workflow - Product update successful', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson.product).to.have.property('quantity', 45);",
+                                    "});",
+                                    "",
+                                    "console.log('📊 Inventory update verified successfully');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{ "key": "token", "value": "{{workflow_access_token}}", "type": "string" }]
+                        },
+                        "method": "PATCH",
+                        "header": [{ "key": "Content-Type", "value": "application/json" }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"quantity\": 45,\n  \"price\": 1199.99,\n  \"description\": \"High-performance laptop for workflow testing with amazing features - Updated!\",\n  \"lowStockThreshold\": 3\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/products/{{workflow_product_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["products", "{{workflow_product_id}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "06 - Verify User Profile",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Workflow - User session active', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.expect(responseJson.user).to.have.property('email', 'workflow@test.com');",
+                                    "});",
+                                    "",
+                                    "console.log('👤 User session verified successfully');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{ "key": "token", "value": "{{workflow_access_token}}", "type": "string" }]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/auth/profile",
+                            "host": ["{{base_url}}"],
+                            "path": ["auth", "profile"]
+                        }
+                    }
+                },
+                {
+                    "name": "07 - Cleanup & Logout",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Workflow - Logout successful', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200) {",
+                                    "    pm.collectionVariables.unset('workflow_access_token');",
+                                    "    pm.collectionVariables.unset('workflow_refresh_token');",
+                                    "    pm.collectionVariables.unset('workflow_user_id');",
+                                    "    pm.collectionVariables.unset('workflow_category_id');",
+                                    "    pm.collectionVariables.unset('workflow_product_id');",
+                                    "    console.log('🎯 Complete workflow test finished successfully!');",
+                                    "    console.log('✅ All functionality verified: Auth, Categories, Products, Search, Updates');",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{ "key": "token", "value": "{{workflow_access_token}}", "type": "string" }]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/auth/logout",
+                            "host": ["{{base_url}}"],
+                            "path": ["auth", "logout"]
+                        }
+                    }
                 }
             ]
-        }
-    ],
-    "event": [
-        {
-            "listen": "prerequest",
-            "script": {
-                "type": "text/javascript",
-                "exec": [
-                    "// Global pre-request script",
-                    "console.log('🚀 Starting API request to:', pm.request.url.toString());"
-                ]
-            }
-        },
-        {
-            "listen": "test",
-            "script": {
-                "type": "text/javascript",
-                "exec": [
-                    "// Global test script",
-                    "pm.test('Response time is acceptable', function () {",
-                    "    pm.expect(pm.response.responseTime).to.be.below(2000);",
-                    "});",
-                    "",
-                    "pm.test('Response has valid JSON structure', function () {",
-                    "    const responseJson = pm.response.json();",
-                    "    pm.expect(responseJson).to.have.property('success');",
-                    "    pm.expect(responseJson).to.have.property('message');",
-                    "});"
-                ]
-            }
         }
     ],
     "variable": [
         {
             "key": "base_url",
-            "value": "http://localhost:3000/api/v1",
-            "type": "string"
+            "value": "http://localhost:3000",
+            "type": "string",
+            "description": "Base URL for the Inventory API"
+        },
+        {
+            "key": "access_token",
+            "value": "",
+            "type": "string",
+            "description": "JWT access token for authentication"
+        },
+        {
+            "key": "refresh_token",
+            "value": "",
+            "type": "string",
+            "description": "JWT refresh token for token renewal"
+        },
+        {
+            "key": "token_expiry",
+            "value": "",
+            "type": "string",
+            "description": "Token expiry timestamp"
+        },
+        {
+            "key": "user_id",
+            "value": "",
+            "type": "string",
+            "description": "Current user ID"
         },
         {
             "key": "category_id",
             "value": "",
-            "type": "string"
+            "type": "string",
+            "description": "ID of the test category"
         },
         {
             "key": "product_id",
             "value": "",
-            "type": "string"
+            "type": "string",
+            "description": "ID of the test product"
         },
         {
-            "key": "test_category_id",
+            "key": "workflow_access_token",
             "value": "",
-            "type": "string"
+            "type": "string",
+            "description": "Access token for workflow tests"
         },
         {
-            "key": "test_product_id",
+            "key": "workflow_refresh_token",
             "value": "",
-            "type": "string"
+            "type": "string",
+            "description": "Refresh token for workflow tests"
         },
         {
-            "key": "test_category_slug",
+            "key": "workflow_user_id",
             "value": "",
-            "type": "string"
+            "type": "string",
+            "description": "User ID for workflow tests"
         },
         {
-            "key": "test_category_management_id",
+            "key": "workflow_category_id",
             "value": "",
-            "type": "string"
+            "type": "string",
+            "description": "Category ID for workflow tests"
+        },
+        {
+            "key": "workflow_product_id",
+            "value": "",
+            "type": "string",
+            "description": "Product ID for workflow tests"
         }
     ]
 }
