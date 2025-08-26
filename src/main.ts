@@ -3,9 +3,17 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { validationPipeConfig } from './common/pipes/validation.pipe';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
+import * as compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Security middleware
+  app.use(helmet());
+  app.use(compression());
+
+  // Rate limiting is now configured globally via APP_GUARD in AppModule
 
   // Global exception filter
   app.useGlobalFilters(new AllExceptionsFilter());
@@ -25,12 +33,27 @@ async function bootstrap() {
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('Inventory Management API')
-    .setDescription('A robust NestJS TypeScript microservice for inventory management with MongoDB integration, featuring advanced search capabilities and comprehensive CRUD operations for products and categories.')
+    .setDescription(
+      'A robust NestJS TypeScript microservice for inventory management with MongoDB integration, featuring advanced search capabilities and comprehensive CRUD operations for products and categories.',
+    )
     .setVersion('1.0')
+    .addTag('authentication', 'User authentication and authorization')
     .addTag('categories', 'Category management operations')
     .addTag('products', 'Product management operations')
     .addTag('search', 'Advanced search and filtering operations')
-    .setContact('Ezequiel Sanchez', 'https://github.com/GeekyBear/inventory-api', 'your-email@example.com')
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      name: 'JWT',
+      description: 'Enter JWT token',
+      in: 'header',
+    })
+    .setContact(
+      'Ezequiel Sanchez',
+      'https://github.com/GeekyBear/inventory-api',
+      'your-email@example.com',
+    )
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
     .build();
 
@@ -51,4 +74,4 @@ async function bootstrap() {
   console.log(`📊 Database: ${process.env.MONGODB_URI}`);
   console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
 }
-bootstrap();
+void bootstrap();
