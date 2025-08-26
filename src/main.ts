@@ -3,9 +3,17 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { validationPipeConfig } from './common/pipes/validation.pipe';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
+import * as compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Security middleware
+  app.use(helmet());
+  app.use(compression());
+
+  // Rate limiting is now configured globally via APP_GUARD in AppModule
 
   // Global exception filter
   app.useGlobalFilters(new AllExceptionsFilter());
@@ -29,9 +37,18 @@ async function bootstrap() {
       'A robust NestJS TypeScript microservice for inventory management with MongoDB integration, featuring advanced search capabilities and comprehensive CRUD operations for products and categories.',
     )
     .setVersion('1.0')
+    .addTag('authentication', 'User authentication and authorization')
     .addTag('categories', 'Category management operations')
     .addTag('products', 'Product management operations')
     .addTag('search', 'Advanced search and filtering operations')
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      name: 'JWT',
+      description: 'Enter JWT token',
+      in: 'header',
+    })
     .setContact(
       'Ezequiel Sanchez',
       'https://github.com/GeekyBear/inventory-api',

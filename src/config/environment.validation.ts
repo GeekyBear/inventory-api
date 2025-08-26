@@ -23,8 +23,15 @@ export class EnvironmentVariables {
   @IsOptional()
   JWT_SECRET?: string;
 
-  @IsNumber()
-  @Transform(({ value }) => parseInt(value, 10))
+  @IsString()
   @IsOptional()
-  JWT_EXPIRES_IN?: number = 3600;
+  JWT_REFRESH_SECRET?: string;
+
+  @IsString()
+  @IsOptional()
+  JWT_EXPIRES_IN?: string = '15m';
+
+  @IsString()
+  @IsOptional()
+  JWT_REFRESH_EXPIRES_IN?: string = '7d';
 }
