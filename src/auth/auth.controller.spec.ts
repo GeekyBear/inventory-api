@@ -97,8 +97,8 @@ describe('AuthController', () => {
     });
 
     it('should validate required fields', async () => {
-      // This would be caught by class-validator before reaching the controller
-      // We're testing the service is called with the correct DTO
+      authService.register.mockResolvedValue(mockAuthResponse);
+
       await controller.register(registerDto);
       expect(authService.register).toHaveBeenCalledWith(registerDto);
     });
@@ -179,17 +179,17 @@ describe('AuthController', () => {
 
   describe('logout', () => {
     const mockRequest = {
-      user: { sub: mockUser._id },
+      user: { id: mockUser._id },
     };
 
     it('should logout user successfully', async () => {
       authService.logout.mockResolvedValue(undefined);
 
-      const result = await controller.logout(mockRequest as any);
+      const result = await controller.logout(mockRequest.user as any);
 
       expect(authService.logout).toHaveBeenCalledWith(mockUser._id);
       expect(result).toEqual({
-        message: 'Logged out successfully',
+        message: 'Successfully logged out',
       });
     });
 
@@ -198,7 +198,7 @@ describe('AuthController', () => {
         new UnauthorizedException('User not found'),
       );
 
-      await expect(controller.logout(mockRequest as any)).rejects.toThrow(
+      await expect(controller.logout(mockRequest.user as any)).rejects.toThrow(
         UnauthorizedException,
       );
     });
@@ -207,34 +207,22 @@ describe('AuthController', () => {
   describe('getProfile', () => {
     const mockRequest = {
       user: {
-        sub: mockUser._id,
+        id: mockUser._id,
         email: mockUser.email,
         role: mockUser.role,
       },
     };
 
     it('should return user profile successfully', async () => {
-      const result = await controller.getProfile(mockRequest as any);
+      const result = await controller.getProfile(mockRequest.user as any);
 
-      expect(result).toEqual({
-        message: 'Profile retrieved successfully',
-        user: {
-          id: mockUser._id,
-          email: mockUser.email,
-          role: mockUser.role,
-        },
-      });
+      expect(result).toEqual(mockRequest.user);
     });
 
     it('should handle missing user in request', async () => {
-      const emptyRequest = {};
+      const result = await controller.getProfile(undefined as any);
 
-      const result = await controller.getProfile(emptyRequest as any);
-
-      expect(result).toEqual({
-        message: 'Profile retrieved successfully',
-        user: undefined,
-      });
+      expect(result).toBeUndefined();
     });
   });
 
@@ -262,6 +250,8 @@ describe('AuthController', () => {
         email: 'invalid-email',
         password: 'password123',
       };
+
+      authService.register.mockResolvedValue(mockAuthResponse);
 
       // The validation would be handled by class-validator before reaching controller
       // We test that the service is called with whatever passes validation

@@ -83,11 +83,10 @@ describe('JwtStrategy', () => {
 
       expect(usersService.findById).toHaveBeenCalledWith(mockPayload.sub);
       expect(result).toEqual({
-        sub: mockUser.id,
+        id: mockUser.id,
         email: mockUser.email,
         role: mockUser.role,
         name: mockUser.name,
-        isActive: mockUser.isActive,
       });
     });
 
@@ -139,11 +138,10 @@ describe('JwtStrategy', () => {
       const result = await strategy.validate(minimalPayload);
 
       expect(result).toEqual({
-        sub: mockUser.id,
+        id: mockUser.id,
         email: mockUser.email,
         role: mockUser.role,
         name: mockUser.name,
-        isActive: mockUser.isActive,
       });
     });
 

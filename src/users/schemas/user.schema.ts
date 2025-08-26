@@ -20,7 +20,7 @@ export class User extends Document {
   @Prop({ required: true, maxlength: 100 })
   name: string;
 
-  @Prop({ required: true, unique: true, lowercase: true })
+  @Prop({ required: true, lowercase: true })
   email: string;
 
   @Prop({ required: true, minlength: 6 })

@@ -29,6 +29,7 @@ describe('AuthService', () => {
     create: jest.fn(),
     validatePassword: jest.fn(),
     updateRefreshToken: jest.fn(),
+    findById: jest.fn(),
   };
 
   const mockJwtService = {
@@ -100,9 +101,11 @@ describe('AuthService', () => {
     it('should register a new user successfully', async () => {
       usersService.findByEmail.mockResolvedValue(null);
       usersService.create.mockResolvedValue(mockUser);
-      jwtService.sign
-        .mockReturnValueOnce('access_token')
-        .mockReturnValueOnce('refresh_token');
+      
+      // Mock the JWT tokens to be predictable
+      jwtService.signAsync
+        .mockResolvedValueOnce('access_token')
+        .mockResolvedValueOnce('refresh_token');
 
       const result = await service.register(registerDto);
 
@@ -140,9 +143,11 @@ describe('AuthService', () => {
     it('should login user successfully with valid credentials', async () => {
       usersService.findByEmail.mockResolvedValue(mockUser);
       usersService.validatePassword.mockResolvedValue(true);
-      jwtService.sign
-        .mockReturnValueOnce('access_token')
-        .mockReturnValueOnce('refresh_token');
+      
+      // Mock the JWT tokens to be predictable
+      jwtService.signAsync
+        .mockResolvedValueOnce('access_token')
+        .mockResolvedValueOnce('refresh_token');
 
       const result = await service.login(loginDto);
 
@@ -197,10 +202,15 @@ describe('AuthService', () => {
       const decodedToken = { sub: mockUser.id, email: mockUser.email };
 
       jwtService.verify.mockReturnValue(decodedToken);
-      usersService.findByEmail.mockResolvedValue(mockUser);
-      jwtService.sign
-        .mockReturnValueOnce('new_access_token')
-        .mockReturnValueOnce('new_refresh_token');
+      usersService.findById.mockResolvedValue({
+        ...mockUser,
+        refreshToken: 'valid_refresh_token', // Mock the stored refresh token
+      });
+      
+      // Mock the JWT tokens to be predictable
+      jwtService.signAsync
+        .mockResolvedValueOnce('new_access_token')
+        .mockResolvedValueOnce('new_refresh_token');
 
       const result = await service.refreshTokens(refreshToken);
 
@@ -236,7 +246,7 @@ describe('AuthService', () => {
       const decodedToken = { sub: mockUser.id, email: mockUser.email };
 
       jwtService.verify.mockReturnValue(decodedToken);
-      usersService.findByEmail.mockResolvedValue(null);
+      usersService.findById.mockResolvedValue(null);
 
       await expect(service.refreshTokens(refreshToken)).rejects.toThrow(
         UnauthorizedException,

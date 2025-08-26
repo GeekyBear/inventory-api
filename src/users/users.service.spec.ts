@@ -80,7 +80,7 @@ describe('UsersService', () => {
       };
 
       // Mock the model constructor
-      userModel = jest.fn().mockImplementation(() => mockUserInstance);
+      mockUserModel.mockImplementation(() => mockUserInstance);
 
       const result = await service.create(userData);
 
