@@ -44,6 +44,7 @@ A robust NestJS TypeScript microservice for inventory management with MongoDB in
 Get the API running in under 5 minutes:
 
 1. **Clone and Install**
+
    ```bash
    git clone <repository-url>
    cd inventory-api
@@ -51,6 +52,7 @@ Get the API running in under 5 minutes:
    ```
 
 2. **Setup Environment**
+
    ```bash
    # Create .env file
    echo "MONGODB_URI=mongodb://localhost:27017/inventory-api" > .env
@@ -59,6 +61,7 @@ Get the API running in under 5 minutes:
    ```
 
 3. **Start Development Server**
+
    ```bash
    npm run start:dev
    ```
@@ -159,6 +162,7 @@ Once the application is running, access the interactive API documentation at:
 **http://localhost:3000/api**
 
 The Swagger interface provides:
+
 - Complete API endpoint documentation
 - Interactive request/response examples
 - Schema definitions for all DTOs
@@ -309,6 +313,7 @@ npm run test:e2e
 ### Coverage Report
 
 Current test coverage includes:
+
 - **Controllers**: 100% coverage for all endpoints
 - **Services**: Comprehensive business logic testing
 - **Error Handling**: Exception filters and validation testing
